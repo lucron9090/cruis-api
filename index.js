@@ -10,6 +10,9 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from public directory
+app.use(express.static('public'));
+
 // Helper function to extract cookies from response headers
 function extractCookies(headers) {
   const setCookieHeader = headers['set-cookie'];
