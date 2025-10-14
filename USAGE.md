@@ -1,159 +1,132 @@
-# cruis-api Usage Guide
+     _   ___ ___ 
+    /_\ | _ \_ _|
+   /_ _\|  _/| | 
+  /_/ \_\_| |___|
 
-This guide provides comprehensive documentation on how to use the `cruis-api` backend. It covers authentication (logging in), retrieving tokens, and making authenticated API calls with example requests and responses.
+# CRUI-S API Proxy: The Definitive Guide
+
+Authenticate with a card number and start making requests. No fluff.
 
 ---
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
-- [Authentication (Login)](#authentication-login)
-  - [Login Request Example](#login-request-example)
-  - [Login Response Example](#login-response-example)
-- [Retrieving the Token](#retrieving-the-token)
-- [Making Authenticated API Calls](#making-authenticated-api-calls)
-  - [Example: Get User Profile](#example-get-user-profile)
-  - [Example: Other API Calls](#example-other-api-calls)
-- [Error Handling](#error-handling)
-- [Further Reading](#further-reading)
+- [The Lowdown](#the-lowdown)
+- [Step 1: Get Your Auth Token](#step-1-get-your-auth-token)
+- [Step 2: Make Proxied API Calls](#step-2-make-proxied-api-calls)
+- [When Things Break](#when-things-break)
+- [Dig Deeper](#dig-deeper)
 
 ---
 
-## Getting Started
+## The Lowdown
 
-The `cruis-api` backend is a RESTful API built with JavaScript. To interact with it, you need:
+Welcome to the CRUI-S API proxy. The process is simple:
 
-- The base URL (e.g., `https://yourapi.example.com`)
-- An HTTP client (e.g., `curl`, `Postman`, or a JavaScript library like `axios` or `fetch`)
-- An account (username/email and password)
+1.  You trade your library card number for a temporary auth token.
+2.  You use that token in a special header to make proxied requests to the real EBSCO API.
+
+Let's get to it.
 
 ---
 
-## Authentication (Login)
+## Step 1: Get Your Auth Token
 
-To access protected resources, you must log in and obtain a token. Typically, authentication uses JWT (JSON Web Token).
+To get your session token, send a `POST` request to `/api/auth/ebsco` with your card number.
 
-### Login Request Example
+**Endpoint:** `POST /api/auth/ebsco`
 
-```http
-POST /api/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "yourpassword"
-}
-```
-
-#### curl Example
-
-```sh
-curl -X POST https://yourapi.example.com/api/login \
+```bash
+curl -X POST http://localhost:3001/api/auth/ebsco \
   -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "password": "yourpassword"}'
+  -d '{"cardNumber": "1001600244772"}'
 ```
 
-### Login Response Example
+#### The Token Response
 
-If login is successful, you'll receive a token:
+A successful login gets you the golden ticket:
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+  "authToken": "ebsco-auth-cookie-value"
 }
 ```
 
-If credentials are invalid:
+If you mess up (missing field, bad card number), you'll see this instead:
 
 ```json
 {
-  "error": "Invalid credentials"
+  "error": "Authentication failed - no auth token received"
 }
 ```
 
 ---
 
-## Retrieving the Token
+## Step 2: Make Proxied API Calls
 
-The token is returned in the response body after a successful login. Store this token securely; you'll need it for subsequent API calls.
+### The Golden Rule: The `X-Auth-Token` Header
 
-**Example (extracting token in JavaScript):**
+Every single request to the `/api/ebsco-proxy/*` endpoint **must** include the `X-Auth-Token` header. No exceptions. Slap the `authToken` value you got from Step 1 in there.
 
-```javascript
-const response = await fetch('https://yourapi.example.com/api/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email: 'user@example.com', password: 'yourpassword' })
-});
-const data = await response.json();
-const token = data.token;
+### Example Proxied Requests
+
+Here's how to run a GET request. Just replace `your-auth-token` with your actual token.
+
+```bash
+curl -X GET "http://localhost:3001/api/ebsco-proxy/search.ebscohost.com/api/v1/search?query=history" \
+  -H "X-Auth-Token: your-auth-token"
 ```
+
+Need to POST some data? No problem.
+
+```bash
+curl -X POST "http://localhost:3001/api/ebsco-proxy/search.ebscohost.com/api/v1/search" \
+  -H "X-Auth-Token: your-auth-token" \
+  -H "Content-Type: application/json" \
+  -d '{"searchTerm": "climate"}'
+```
+
+**Heads Up:** This is **not** a standard `Authorization: Bearer` token. You must use the `X-Auth-Token` header exactly as shown.
 
 ---
 
-## Making Authenticated API Calls
+## When Things Break
 
-For endpoints that require authentication, include the token in the `Authorization` header as a Bearer token.
+The API will let you know when something's wrong. Here's what to watch for:
 
-### Example: Get User Profile
-
-```http
-GET /api/profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
-```
-
-#### curl Example
-
-```sh
-curl -X GET https://yourapi.example.com/api/profile \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-```
-
-#### JavaScript (fetch):
-
-```javascript
-const profileResp = await fetch('https://yourapi.example.com/api/profile', {
-  headers: { 'Authorization': `Bearer ${token}` }
-});
-const profileData = await profileResp.json();
-```
-
-### Example: Other API Calls
-
-Any protected API endpoint can be called similarly:
-
-```http
-GET /api/items
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
-```
-
----
-
-## Error Handling
-
-If your token is missing, invalid, or expired, the API will respond with an error:
+**Forgot the token?** You'll get this error:
 
 ```json
 {
-  "error": "Unauthorized"
+  "error": "X-Auth-Token header is required"
 }
 ```
 
-Always check for error responses and handle them gracefully in your client.
+**Invalid or Expired Token?** The proxy will complain like this:
+
+```json
+{
+  "error": "Proxy request failed",
+  "message": "...",
+  "status": 401
+}
+```
+
+Always check your responses for an `error` field.
 
 ---
 
-## Further Reading
+## Dig Deeper
 
-- [JWT Specification](https://jwt.io/)
-- [Using curl](https://curl.se/docs/manpage.html)
-- [Fetch API Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
-- [axios HTTP Client](https://github.com/axios/axios)
+- [README.md – Endpoint Documentation](https://github.com/lucron9090/cruis-api/blob/main/README.md)
+- [index.js – Authentication Logic](https://github.com/lucron9090/cruis-api/blob/main/index.js)
+- [EBSCO API Documentation](https://developer.ebsco.com/)
 
 ---
 
-## Notes
+## The TL;DR
 
-- Always use HTTPS in production to keep your credentials and tokens safe.
-- Never share your token publicly.
-- Token expiration and refresh mechanisms are implementation-specific; consult your API's authentication documentation for details.
+1.  **POST** your card number to `/api/auth/ebsco`.
+2.  **Grab** the `authToken` from the response.
+3.  **Add** it as an `X-Auth-Token` header to all requests you send to `/api/ebsco-proxy/*`.
+4.  **Remember:** Don't use `Authorization: Bearer`. Stick to the proxy's `X-Auth-Token` flow.
