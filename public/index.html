@@ -316,8 +316,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    <label for="password">Password (optional)</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password (optional)">
                 </div>
 
                 <button type="submit" id="authButton">Authenticate</button>
@@ -396,9 +396,9 @@
                     <p style="color: #666; margin-bottom: 15px;">Authenticate with EBSCO using library card credentials and return an authentication token.</p>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Request Body:</strong>
-                    <pre style="margin: 0;">{
-  "cardNumber": "1001600244772",
-  "password": "your-password"
+                                        <pre style="margin: 0;">{
+    "cardNumber": "1001600244772"
+    // "password": "your-password" (optional)
 }</pre>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Response (200 OK):</strong>
@@ -408,7 +408,7 @@
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Error Responses:</strong>
                     <ul style="margin: 5px 0; padding-left: 20px; color: #666;">
-                        <li>400 - Bad request (missing cardNumber or password)</li>
+                        <li>400 - Bad request (missing cardNumber)</li>
                         <li>401 - Authentication failed</li>
                         <li>500 - Server error</li>
                     </ul>
@@ -472,7 +472,7 @@ Content-Type: application/json</pre>
                     <ol style="margin: 10px 0; padding-left: 20px; color: #666; line-height: 1.8;">
                         <li>GET login page from EBSCO with custId, groupId, profId, and requestIdentifier</li>
                         <li>POST to login API with library card number</li>
-                        <li>POST to login API with password</li>
+                        <li>POST to login API with password (optional)</li>
                         <li>Follow redirects to extract authentication cookie</li>
                         <li>Return auth token to client</li>
                     </ol>

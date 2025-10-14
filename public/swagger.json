@@ -23,7 +23,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["cardNumber", "password"],
+                "required": ["cardNumber"],
                 "properties": {
                   "cardNumber": {
                     "type": "string",
@@ -32,7 +32,7 @@
                   },
                   "password": {
                     "type": "string",
-                    "description": "Library card password",
+                    "description": "Library card password (optional)",
                     "example": "your-password"
                   }
                 }
