@@ -980,8 +980,8 @@ app.all('/api/motor/*', async (req, res) => {
     // Extract the Motor API path (everything after /api/motor/)
     const motorPath = req.path.replace('/api/motor/', '');
     
-    // Use Motor web interface API endpoint
-    const targetUrl = `https://sites.motor.com/m1/api/${motorPath}`;
+    // Motor swagger specifies api.motor.com/v1 as the base
+    const targetUrl = `https://api.motor.com/${motorPath}`;
     
     // Build full URL with query parameters
     const url = new URL(targetUrl);
@@ -991,7 +991,7 @@ app.all('/api/motor/*', async (req, res) => {
       }
     });
 
-    console.log(`Proxying ${req.method} via Puppeteer to web interface: ${url.toString()}`);
+    console.log(`Proxying ${req.method} via Puppeteer: ${url.toString()}`);
 
     // Launch browser with cookies from session
     browser = await puppeteer.launch({
@@ -1036,51 +1036,108 @@ app.all('/api/motor/*', async (req, res) => {
       timeout: 30000 
     });
     
-    // Make API request from browser context using fetch
+    // Determine base host: if path begins with m1/ it's likely the web UI (sites.motor.com)
+    let finalUrl = url.toString();
+    try {
+      const pathAfterHost = new URL(finalUrl).pathname;
+      // no-op, kept for clarity
+    } catch (e) {
+      // ignore
+    }
+
+    // Make API request from browser context using fetch, parsing HTML for embedded JSON when needed
     const result = await page.evaluate(async (url, method, bodyData) => {
+      const tryParseJSON = (str) => {
+        try {
+          return JSON.parse(str);
+        } catch (e) {
+          return null;
+        }
+      };
+
+      const extractJsonFromHtml = (html) => {
+        // 1) Look for <script type="application/json"> or application/ld+json
+        try {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+
+          const scripts = Array.from(doc.querySelectorAll('script[type="application/json"], script[type="application/ld+json"]'));
+          for (const s of scripts) {
+            const txt = s.textContent && s.textContent.trim();
+            if (txt) {
+              const parsed = tryParseJSON(txt);
+              if (parsed) return parsed;
+            }
+          }
+
+          // 2) Search inline scripts for common bootstrapped variables e.g. window.__INITIAL_STATE__ = {...}; or window.__DATA__ = {...};
+          const inlineScripts = Array.from(doc.scripts).map(s => s.textContent || '').join('\n');
+          const patterns = [
+            /window\.__INITIAL_STATE__\s*=\s*(\{[\s\S]*?\})\s*;/m,
+            /window\.__DATA__\s*=\s*(\{[\s\S]*?\})\s*;/m,
+            /var\s+initialState\s*=\s*(\{[\s\S]*?\})\s*;/m,
+            /window\.__PRELOADED_STATE__\s*=\s*(\{[\s\S]*?\})\s*;/m
+          ];
+
+          for (const re of patterns) {
+            const m = inlineScripts.match(re);
+            if (m && m[1]) {
+              const parsed = tryParseJSON(m[1]);
+              if (parsed) return parsed;
+            }
+          }
+
+          // 3) Fallback: look for any <div data-json> or elements with JSON in data-* attributes
+          const dataEls = Array.from(doc.querySelectorAll('[data-json], [data-state], [data-props]'));
+          for (const el of dataEls) {
+            const txt = el.getAttribute('data-json') || el.getAttribute('data-state') || el.getAttribute('data-props');
+            if (txt) {
+              const parsed = tryParseJSON(txt);
+              if (parsed) return parsed;
+            }
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+
+        return null;
+      };
+
       try {
         const options = {
           method,
           headers: {
-            'Accept': 'application/json',
+            'Accept': 'application/json, text/javascript, text/html, */*',
             'Content-Type': 'application/json'
           },
-          credentials: 'include' // Include cookies in request
+          credentials: 'same-origin'
         };
-        
+
         if (method !== 'GET' && method !== 'HEAD' && bodyData) {
           options.body = JSON.stringify(bodyData);
         }
-        
+
         const response = await fetch(url, options);
-        const contentType = response.headers.get('content-type');
-        
-        let data;
-        if (contentType && contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          // Try to parse as JSON even if content-type is wrong
-          const text = await response.text();
-          try {
-            data = JSON.parse(text);
-          } catch {
-            data = text;
-          }
+        const contentType = response.headers.get('content-type') || '';
+
+        if (contentType.includes('application/json') || contentType.includes('text/javascript')) {
+          const data = await response.json();
+          return { status: response.status, statusText: response.statusText, headers: Object.fromEntries(response.headers.entries()), data, dataType: 'json' };
         }
-        
-        return {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries()),
-          data
-        };
+
+        // If HTML returned, attempt to extract embedded JSON
+        const text = await response.text();
+        const parsed = extractJsonFromHtml(text);
+        if (parsed) {
+          return { status: response.status, statusText: response.statusText, headers: Object.fromEntries(response.headers.entries()), data: parsed, dataType: 'embedded-json' };
+        }
+
+        // No JSON found — return the HTML wrapped inside JSON so caller always receives JSON
+        return { status: response.status, statusText: response.statusText, headers: Object.fromEntries(response.headers.entries()), data: { html: text }, dataType: 'html' };
       } catch (error) {
-        return {
-          error: error.message,
-          stack: error.stack
-        };
+        return { error: error.message, stack: error.stack };
       }
-    }, url.toString(), req.method, req.method !== 'GET' && req.method !== 'HEAD' ? req.body : null);
+    }, finalUrl, req.method, req.method !== 'GET' && req.method !== 'HEAD' ? req.body : null);
 
     await browser.close();
     browser = null;
@@ -1092,16 +1149,20 @@ app.all('/api/motor/*', async (req, res) => {
       });
     }
 
-    // Always return JSON, even if data is a string
-    if (typeof result.data === 'string') {
-      return res.status(result.status).json({
-        status: result.status,
-        statusText: result.statusText,
-        content: result.data
-      });
+    // Ensure we always return JSON. If the page returned HTML we wrapped it in { html: '...' }.
+    // If embedded JSON was found, return it directly.
+    if (result.dataType === 'json' || result.dataType === 'embedded-json') {
+      return res.status(result.status).json(result.data);
     }
-    
-    res.status(result.status).json(result.data);
+
+    // For html or unknown types, return a JSON wrapper containing the HTML string and some metadata
+    return res.status(result.status).json({
+      _meta: {
+        statusText: result.statusText,
+        dataType: result.dataType || 'unknown'
+      },
+      data: result.data
+    });
 
   } catch (error) {
     console.error('Motor API proxy error:', error.message);
