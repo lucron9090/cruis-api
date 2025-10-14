@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRUIS API - EBSCO Authentication & Proxy Service</title>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
     <style>
         * {
             margin: 0;
@@ -482,8 +481,6 @@ Content-Type: application/json</pre>
         </div>
     </div>
 
-    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
-    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-standalone-preset.js"></script>
     <script>
         // Tab switching
         function switchTab(tabName) {
@@ -502,47 +499,6 @@ Content-Type: application/json</pre>
 
             // Activate selected tab button
             event.target.classList.add('active');
-
-            // Initialize Swagger UI if swagger tab is opened
-            if (tabName === 'swagger' && !window.swaggerInitialized) {
-                initSwagger();
-            }
-        }
-
-        // Initialize Swagger UI
-        function initSwagger() {
-            window.swaggerInitialized = true;
-            
-            // Check if Swagger UI libraries are loaded
-            if (typeof SwaggerUIBundle !== 'undefined') {
-                try {
-                    SwaggerUIBundle({
-                        url: '/swagger.json',
-                        dom_id: '#swagger-ui',
-                        deepLinking: true,
-                        presets: [
-                            SwaggerUIBundle.presets.apis,
-                            SwaggerUIStandalonePreset
-                        ],
-                        plugins: [
-                            SwaggerUIBundle.plugins.DownloadUrl
-                        ],
-                        layout: "StandaloneLayout"
-                    });
-                } catch (error) {
-                    console.error('Failed to initialize Swagger UI:', error);
-                    showSwaggerFallback();
-                }
-            } else {
-                showSwaggerFallback();
-            }
-        }
-
-        function showSwaggerFallback() {
-            const swaggerDiv = document.getElementById('swagger-ui');
-            if (swaggerDiv) {
-                swaggerDiv.innerHTML = '<div class="info-box"><strong>Note:</strong> Swagger UI interactive documentation could not be loaded. Please refer to the documentation below or download the OpenAPI specification file above.</div>';
-            }
         }
 
         // Handle authentication form submission
