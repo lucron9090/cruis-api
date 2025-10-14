@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUIS API - EBSCO Authentication & Proxy Service</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+        }
+
+        .response.error {
+            background: #fee;
+            border-left-color: #e74c3c;
+        }
+
+        .response.success {
+            background: #efe;
+            border-left-color: #27ae60;
+        }
+
+        .response-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box strong {
+            color: #1976D2;
+        }
+
+        #swagger-ui {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .method-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .method-get {
+            background: #61affe;
+            color: white;
+        }
+
+        .method-post {
+            background: #49cc90;
+            color: white;
+        }
+
+        .endpoint-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .endpoint-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .endpoint-description {
+            margin-top: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 CRUIS API</h1>
+            <p class="subtitle">EBSCO Authentication & Proxy Service</p>
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('overview')">Overview</button>
+                <button class="tab" onclick="switchTab('auth')">Authentication</button>
+                <button class="tab" onclick="switchTab('proxy')">Proxy Request</button>
+                <button class="tab" onclick="switchTab('swagger')">API Documentation</button>
+            </div>
+        </header>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <h2>Welcome to CRUIS API</h2>
+            <p style="margin: 20px 0; color: #666;">
+                This API provides a seamless way to authenticate with EBSCO services and proxy authenticated requests.
+            </p>
+
+            <div class="info-box">
+                <strong>Quick Start:</strong> Use the Authentication tab to get your auth token, then use it in the Proxy Request tab to make authenticated API calls.
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #333;">Available Endpoints</h3>
+            <ul class="endpoint-list">
+                <li class="endpoint-item">
+                    <span class="method-badge method-post">POST</span>
+                    <span class="endpoint-path">/api/auth/ebsco</span>
+                    <div class="endpoint-description">Authenticate with EBSCO using library card credentials</div>
+                </li>
+                <li class="endpoint-item">
+                    <span class="method-badge method-get">GET</span>
+                    <span class="endpoint-path">/api/ebsco-proxy/*</span>
+                    <div class="endpoint-description">Proxy GET requests to EBSCO services with authentication</div>
+                </li>
+                <li class="endpoint-item">
+                    <span class="method-badge method-post">POST</span>
+                    <span class="endpoint-path">/api/ebsco-proxy/*</span>
+                    <div class="endpoint-description">Proxy POST requests to EBSCO services with authentication</div>
+                </li>
+                <li class="endpoint-item">
+                    <span class="method-badge method-get">GET</span>
+                    <span class="endpoint-path">/health</span>
+                    <div class="endpoint-description">Health check endpoint</div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Authentication Tab -->
+        <div id="auth" class="tab-content">
+            <h2>EBSCO Authentication</h2>
+            <p style="margin: 20px 0; color: #666;">
+                Enter your library card credentials to obtain an authentication token.
+            </p>
+
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <div class="form-group">
+                    <label for="cardNumber">Library Card Number</label>
+                    <input type="text" id="cardNumber" name="cardNumber" placeholder="1001600244772" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" id="authButton">Authenticate</button>
+            </form>
+
+            <div id="authResponse"></div>
+        </div>
+
+        <!-- Proxy Tab -->
+        <div id="proxy" class="tab-content">
+            <h2>Proxy Request</h2>
+            <p style="margin: 20px 0; color: #666;">
+                Make authenticated requests to EBSCO services using your auth token.
+            </p>
+
+            <form id="proxyForm" onsubmit="handleProxy(event)">
+                <div class="form-group">
+                    <label for="authToken">Auth Token</label>
+                    <input type="text" id="authToken" name="authToken" placeholder="Paste your auth token here" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="method">HTTP Method</label>
+                    <select id="method" name="method" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="targetPath">Target Path</label>
+                    <input type="text" id="targetPath" name="targetPath" placeholder="search.ebscohost.com/api/v1/search" required>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Enter the full path after the EBSCO domain (e.g., search.ebscohost.com/api/v1/search)
+                    </small>
+                </div>
+
+                <div class="form-group" id="requestBodyGroup">
+                    <label for="requestBody">Request Body (JSON)</label>
+                    <textarea id="requestBody" name="requestBody" placeholder='{"key": "value"}'></textarea>
+                </div>
+
+                <button type="submit" id="proxyButton">Send Request</button>
+            </form>
+
+            <div id="proxyResponse"></div>
+        </div>
+
+        <!-- Swagger UI Tab -->
+        <div id="swagger" class="tab-content">
+            <h2>API Documentation</h2>
+            <p style="margin: 20px 0; color: #666;">
+                Complete API reference and OpenAPI specification.
+            </p>
+            
+            <div class="info-box" style="margin-bottom: 30px;">
+                <strong>OpenAPI Specification:</strong> 
+                <a href="/swagger.json" target="_blank" style="color: #1976D2; text-decoration: underline; margin-left: 10px;">
+                    Download swagger.json
+                </a>
+            </div>
+
+            <div id="swagger-ui"></div>
+            
+            <!-- Fallback Documentation -->
+            <div id="api-docs-fallback">
+                <h3 style="margin-top: 30px; margin-bottom: 15px; color: #333;">API Endpoints Reference</h3>
+                
+                <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #49cc90;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">
+                        <span class="method-badge method-post">POST</span>
+                        /api/auth/ebsco
+                    </h4>
+                    <p style="color: #666; margin-bottom: 15px;">Authenticate with EBSCO using library card credentials and return an authentication token.</p>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Request Body:</strong>
+                    <pre style="margin: 0;">{
+  "cardNumber": "1001600244772",
+  "password": "your-password"
+}</pre>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Response (200 OK):</strong>
+                    <pre style="margin: 0;">{
+  "authToken": "ebsco-auth-cookie-value"
+}</pre>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Error Responses:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px; color: #666;">
+                        <li>400 - Bad request (missing cardNumber or password)</li>
+                        <li>401 - Authentication failed</li>
+                        <li>500 - Server error</li>
+                    </ul>
+                </div>
+
+                <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #61affe;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">
+                        <span class="method-badge method-get">GET</span>
+                        /api/ebsco-proxy/{path}
+                    </h4>
+                    <p style="color: #666; margin-bottom: 15px;">Proxy authenticated GET requests to EBSCO services.</p>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Required Headers:</strong>
+                    <pre style="margin: 0;">X-Auth-Token: your-auth-token-here</pre>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Path Parameter:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px; color: #666;">
+                        <li><strong>path</strong> - The target path after EBSCO domain (e.g., search.ebscohost.com/api/v1/search)</li>
+                    </ul>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Example:</strong>
+                    <pre style="margin: 0;">GET /api/ebsco-proxy/search.ebscohost.com/api/v1/search
+X-Auth-Token: your-auth-token</pre>
+                </div>
+
+                <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #49cc90;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">
+                        <span class="method-badge method-post">POST</span>
+                        /api/ebsco-proxy/{path}
+                    </h4>
+                    <p style="color: #666; margin-bottom: 15px;">Proxy authenticated POST requests to EBSCO services.</p>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Required Headers:</strong>
+                    <pre style="margin: 0;">X-Auth-Token: your-auth-token-here
+Content-Type: application/json</pre>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Path Parameter:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px; color: #666;">
+                        <li><strong>path</strong> - The target path after EBSCO domain</li>
+                    </ul>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Request Body:</strong>
+                    <pre style="margin: 0;">Optional JSON payload for the proxied request</pre>
+                </div>
+
+                <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #61affe;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">
+                        <span class="method-badge method-get">GET</span>
+                        /health
+                    </h4>
+                    <p style="color: #666; margin-bottom: 15px;">Health check endpoint to verify service availability.</p>
+                    
+                    <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Response (200 OK):</strong>
+                    <pre style="margin: 0;">{
+  "status": "ok"
+}</pre>
+                </div>
+
+                <div style="margin-top: 40px; padding: 20px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #2196F3;">
+                    <h4 style="margin: 0 0 10px 0; color: #1976D2;">Authentication Flow</h4>
+                    <ol style="margin: 10px 0; padding-left: 20px; color: #666; line-height: 1.8;">
+                        <li>GET login page from EBSCO with custId, groupId, profId, and requestIdentifier</li>
+                        <li>POST to login API with library card number</li>
+                        <li>POST to login API with password</li>
+                        <li>Follow redirects to extract authentication cookie</li>
+                        <li>Return auth token to client</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-standalone-preset.js"></script>
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Deactivate all tab buttons
+            document.querySelectorAll('.tab').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Activate selected tab button
+            event.target.classList.add('active');
+
+            // Initialize Swagger UI if swagger tab is opened
+            if (tabName === 'swagger' && !window.swaggerInitialized) {
+                initSwagger();
+            }
+        }
+
+        // Initialize Swagger UI
+        function initSwagger() {
+            window.swaggerInitialized = true;
+            
+            // Check if Swagger UI libraries are loaded
+            if (typeof SwaggerUIBundle !== 'undefined') {
+                try {
+                    SwaggerUIBundle({
+                        url: '/swagger.json',
+                        dom_id: '#swagger-ui',
+                        deepLinking: true,
+                        presets: [
+                            SwaggerUIBundle.presets.apis,
+                            SwaggerUIStandalonePreset
+                        ],
+                        plugins: [
+                            SwaggerUIBundle.plugins.DownloadUrl
+                        ],
+                        layout: "StandaloneLayout"
+                    });
+                } catch (error) {
+                    console.error('Failed to initialize Swagger UI:', error);
+                    showSwaggerFallback();
+                }
+            } else {
+                showSwaggerFallback();
+            }
+        }
+
+        function showSwaggerFallback() {
+            const swaggerDiv = document.getElementById('swagger-ui');
+            if (swaggerDiv) {
+                swaggerDiv.innerHTML = '<div class="info-box"><strong>Note:</strong> Swagger UI interactive documentation could not be loaded. Please refer to the documentation below or download the OpenAPI specification file above.</div>';
+            }
+        }
+
+        // Handle authentication form submission
+        async function handleAuth(event) {
+            event.preventDefault();
+            
+            const button = document.getElementById('authButton');
+            const responseDiv = document.getElementById('authResponse');
+            
+            button.disabled = true;
+            button.textContent = 'Authenticating...';
+            responseDiv.innerHTML = '<div class="loading">Processing authentication...</div>';
+
+            const formData = {
+                cardNumber: document.getElementById('cardNumber').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/api/auth/ebsco', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    responseDiv.innerHTML = `
+                        <div class="response success">
+                            <div class="response-title">✅ Authentication Successful!</div>
+                            <p style="margin: 10px 0;">Your auth token:</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                            <button onclick="copyAuthToken('${data.authToken}')" style="margin-top: 10px;">
+                                Copy Token to Proxy Tab
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    responseDiv.innerHTML = `
+                        <div class="response error">
+                            <div class="response-title">❌ Authentication Failed</div>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="response error">
+                        <div class="response-title">❌ Error</div>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Authenticate';
+            }
+        }
+
+        // Handle proxy form submission
+        async function handleProxy(event) {
+            event.preventDefault();
+            
+            const button = document.getElementById('proxyButton');
+            const responseDiv = document.getElementById('proxyResponse');
+            
+            button.disabled = true;
+            button.textContent = 'Sending...';
+            responseDiv.innerHTML = '<div class="loading">Sending request...</div>';
+
+            const authToken = document.getElementById('authToken').value;
+            const method = document.getElementById('method').value;
+            const targetPath = document.getElementById('targetPath').value;
+            const requestBody = document.getElementById('requestBody').value;
+
+            const url = `/api/ebsco-proxy/${targetPath}`;
+            const options = {
+                method: method,
+                headers: {
+                    'X-Auth-Token': authToken,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (method !== 'GET' && requestBody) {
+                try {
+                    options.body = requestBody;
+                } catch (e) {
+                    responseDiv.innerHTML = `
+                        <div class="response error">
+                            <div class="response-title">❌ Invalid JSON</div>
+                            <p>Request body must be valid JSON</p>
+                        </div>
+                    `;
+                    button.disabled = false;
+                    button.textContent = 'Send Request';
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch(url, options);
+                const contentType = response.headers.get('content-type');
+                let data;
+
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+
+                if (response.ok) {
+                    responseDiv.innerHTML = `
+                        <div class="response success">
+                            <div class="response-title">✅ Request Successful (${response.status})</div>
+                            <pre>${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    responseDiv.innerHTML = `
+                        <div class="response error">
+                            <div class="response-title">❌ Request Failed (${response.status})</div>
+                            <pre>${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="response error">
+                        <div class="response-title">❌ Error</div>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Send Request';
+            }
+        }
+
+        // Copy auth token to proxy tab
+        function copyAuthToken(token) {
+            document.getElementById('authToken').value = token;
+            switchTab('proxy');
+            document.querySelectorAll('.tab')[2].classList.add('active');
+            alert('Auth token copied to Proxy Request tab!');
+        }
+
+        // Toggle request body visibility based on method
+        document.getElementById('method').addEventListener('change', function() {
+            const requestBodyGroup = document.getElementById('requestBodyGroup');
+            if (this.value === 'GET') {
+                requestBodyGroup.style.display = 'none';
+            } else {
+                requestBodyGroup.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -4,6 +4,8 @@ Backend API server for EBSCO authentication and proxy services.
 
 ## Features
 
+- **Interactive Web Frontend** - User-friendly interface for API interaction
+- **OpenAPI/Swagger Documentation** - Complete API specification with downloadable swagger.json
 - EBSCO authentication flow with library card number and password
 - Proxy endpoint for authenticated EBSCO requests
 - CORS enabled for cross-origin requests
@@ -22,6 +24,27 @@ npm start
 ```
 
 The server will start on `http://localhost:3001`
+
+## Web Interface
+
+Once the server is running, open your browser and navigate to:
+
+```
+http://localhost:3001
+```
+
+The web interface provides:
+- **Overview** - Quick introduction and available endpoints
+- **Authentication** - Interactive form to authenticate with EBSCO
+- **Proxy Request** - Interface to make authenticated requests to EBSCO services
+- **API Documentation** - Complete API reference with OpenAPI specification
+
+### OpenAPI Specification
+
+The OpenAPI/Swagger specification is available at:
+```
+http://localhost:3001/swagger.json
+```
 
 ## API Endpoints
 
