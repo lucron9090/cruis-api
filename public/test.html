@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor API Proxy - Test Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .status-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-label {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .status-value {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 968px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .response-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response-box pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .quick-actions button {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .example-endpoints {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .example-endpoints h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .example-endpoints code {
+            display: block;
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .example-endpoints code:hover {
+            background: #f8f9fa;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚗 Motor API Proxy - Test Interface</h1>
+            <p>EBSCO Authentication & Motor API Testing Dashboard</p>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">Server:</span>
+                <span id="serverStatus" class="status-value status-disconnected">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Session:</span>
+                <span id="sessionStatus" class="status-value status-info">Not Authenticated</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Active Sessions:</span>
+                <span id="activeSessions" class="status-value status-info">-</span>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid">
+            <!-- Authentication Card -->
+            <div class="card">
+                <h2>Authentication</h2>
+                <div id="authMessage"></div>
+                <form id="authForm">
+                    <div class="form-group">
+                        <label for="cardNumber">Library Card Number</label>
+                        <input 
+                            type="text" 
+                            id="cardNumber" 
+                            placeholder="Enter your library card number"
+                            value="1001600244772"
+                            required
+                        >
+                    </div>
+                    <button type="submit" id="authButton">
+                        <span id="authButtonText">🔐 Authenticate</span>
+                    </button>
+                </form>
+                <div id="authResponse" class="response-box hidden">
+                    <pre id="authResponseText"></pre>
+                </div>
+            </div>
+
+            <!-- API Call Card -->
+            <div class="card">
+                <h2>Make API Call</h2>
+                <div id="apiMessage"></div>
+                
+                <div class="example-endpoints">
+                    <h4>📌 Example API Endpoints (click to use):</h4>
+                    <code onclick="setEndpoint('m1/api/years')">m1/api/years</code>
+                    <code onclick="setEndpoint('m1/api/year/2024/makes')">m1/api/year/2024/makes</code>
+                    <code onclick="setEndpoint('m1/api/year/2024/make/Cadillac/models')">m1/api/year/2024/make/Cadillac/models</code>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                        💡 <strong>Tip:</strong> Use <code>/m1/api/*</code> endpoints for clean JSON responses. 
+                        Regular page routes like <code>/m1/vehicles</code> return HTML.
+                    </p>
+                </div>
+
+                <form id="apiForm">
+                    <div class="form-group">
+                        <label for="method">HTTP Method</label>
+                        <select id="method">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="endpoint">Endpoint Path (after /api/motor/)</label>
+                        <input 
+                            type="text" 
+                            id="endpoint" 
+                            placeholder="e.g., m1/api/years"
+                            value="m1/api/years"
+                            required
+                        >
+                    </div>
+                    <div class="form-group" id="bodyGroup" style="display: none;">
+                        <label for="requestBody">Request Body (JSON)</label>
+                        <textarea id="requestBody" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                    <button type="submit" id="apiButton" disabled>
+                        <span id="apiButtonText">🚀 Send Request</span>
+                    </button>
+                </form>
+                <div id="apiResponse" class="response-box hidden">
+                    <pre id="apiResponseText"></pre>
+                </div>
+            </div>
+
+            <!-- Session Management Card -->
+            <div class="card full-width">
+                <h2>Session Management</h2>
+                <div class="quick-actions">
+                    <button onclick="checkHealth()" class="btn-secondary">🏥 Check Server Health</button>
+                    <button onclick="clearSession()" class="btn-secondary" id="clearSessionBtn" disabled>🗑️ Clear Session</button>
+                    <button onclick="deleteSession()" class="btn-secondary" id="deleteSessionBtn" disabled>❌ Delete Session from Server</button>
+                    <button onclick="copySessionId()" class="btn-secondary" id="copySessionBtn" disabled>📋 Copy Session ID</button>
+                </div>
+                <div id="sessionInfo" class="response-box hidden">
+                    <pre id="sessionInfoText"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let sessionId = localStorage.getItem('motorSessionId') || null;
+        let sessionExpiry = localStorage.getItem('motorSessionExpiry') || null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkHealth();
+            if (sessionId) {
+                updateSessionStatus();
+            }
+            
+            // Show/hide request body based on method
+            document.getElementById('method').addEventListener('change', (e) => {
+                const bodyGroup = document.getElementById('bodyGroup');
+                bodyGroup.style.display = ['POST', 'PUT'].includes(e.target.value) ? 'block' : 'none';
+            });
+        });
+
+        // Check if page is served correctly
+        if (window.location.protocol === 'file:') {
+            alert('⚠️ Warning: You are viewing this file directly (file://). Please open it through the server at http://localhost:3001/test.html');
+        }
+
+        // Check server health
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                document.getElementById('serverStatus').textContent = 'Connected';
+                document.getElementById('serverStatus').className = 'status-value status-connected';
+                document.getElementById('activeSessions').textContent = data.activeSessions || 0;
+                
+                showSessionInfo(JSON.stringify(data, null, 2));
+            } catch (error) {
+                document.getElementById('serverStatus').textContent = 'Disconnected';
+                document.getElementById('serverStatus').className = 'status-value status-disconnected';
+                showSessionInfo('Error: ' + error.message);
+            }
+        }
+
+        // Authentication
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const cardNumber = document.getElementById('cardNumber').value;
+            const button = document.getElementById('authButton');
+            const buttonText = document.getElementById('authButtonText');
+            
+            button.disabled = true;
+            buttonText.innerHTML = '<span class="loading"></span> Authenticating...';
+            clearMessage('auth');
+            
+            try {
+                const response = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cardNumber })
+                });
+                
+                // Check if response is OK
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+                }
+                
+                // Try to parse JSON
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`Expected JSON but got ${contentType}. Response: ${text.substring(0, 200)}`);
+                }
+                
+                if (data.success && data.sessionId) {
+                    sessionId = data.sessionId;
+                    sessionExpiry = data.credentials?.ApiTokenExpiration;
+                    localStorage.setItem('motorSessionId', sessionId);
+                    localStorage.setItem('motorSessionExpiry', sessionExpiry);
+                    
+                    showMessage('auth', '✅ Authentication successful! Session created.', 'success');
+                    showAuthResponse(JSON.stringify(data, null, 2));
+                    updateSessionStatus();
+                    checkHealth();
+                } else {
+                    showMessage('auth', '❌ Authentication failed: ' + (data.error || data.message), 'error');
+                    showAuthResponse(JSON.stringify(data, null, 2));
+                }
+            } catch (error) {
+                console.error('Authentication error:', error);
+                showMessage('auth', '❌ Error: ' + error.message, 'error');
+                showAuthResponse('Error: ' + error.message + '\n\nCheck browser console for details.');
+            } finally {
+                button.disabled = false;
+                buttonText.textContent = '🔐 Authenticate';
+            }
+        });
+
+        // API Call
+        document.getElementById('apiForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!sessionId) {
+                showMessage('api', '⚠️ Please authenticate first', 'error');
+                return;
+            }
+            
+            const method = document.getElementById('method').value;
+            const endpoint = document.getElementById('endpoint').value;
+            const body = document.getElementById('requestBody').value;
+            
+            const button = document.getElementById('apiButton');
+            const buttonText = document.getElementById('apiButtonText');
+            
+            button.disabled = true;
+            buttonText.innerHTML = '<span class="loading"></span> Sending...';
+            clearMessage('api');
+            
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'X-Session-Id': sessionId,
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                if (['POST', 'PUT'].includes(method) && body) {
+                    options.body = body;
+                }
+                
+                const response = await fetch(`/api/motor/${endpoint}`, options);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('api', `✅ Request successful (${response.status})`, 'success');
+                } else {
+                    showMessage('api', `⚠️ Request failed (${response.status})`, 'error');
+                }
+                
+                showApiResponse(JSON.stringify(data, null, 2));
+            } catch (error) {
+                showMessage('api', '❌ Error: ' + error.message, 'error');
+                showApiResponse('Error: ' + error.message);
+            } finally {
+                button.disabled = false;
+                buttonText.textContent = '🚀 Send Request';
+            }
+        });
+
+        // Helper functions
+        function updateSessionStatus() {
+            const statusEl = document.getElementById('sessionStatus');
+            const apiButton = document.getElementById('apiButton');
+            const clearBtn = document.getElementById('clearSessionBtn');
+            const deleteBtn = document.getElementById('deleteSessionBtn');
+            const copyBtn = document.getElementById('copySessionBtn');
+            
+            if (sessionId) {
+                const shortId = sessionId.substring(0, 8) + '...';
+                statusEl.textContent = `Active (${shortId})`;
+                statusEl.className = 'status-value status-connected';
+                apiButton.disabled = false;
+                clearBtn.disabled = false;
+                deleteBtn.disabled = false;
+                copyBtn.disabled = false;
+            } else {
+                statusEl.textContent = 'Not Authenticated';
+                statusEl.className = 'status-value status-info';
+                apiButton.disabled = true;
+                clearBtn.disabled = true;
+                deleteBtn.disabled = true;
+                copyBtn.disabled = true;
+            }
+        }
+
+        function clearSession() {
+            sessionId = null;
+            sessionExpiry = null;
+            localStorage.removeItem('motorSessionId');
+            localStorage.removeItem('motorSessionExpiry');
+            updateSessionStatus();
+            showSessionInfo('Session cleared from local storage');
+        }
+
+        async function deleteSession() {
+            if (!sessionId) return;
+            
+            try {
+                const response = await fetch(`/api/session/${sessionId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                showSessionInfo(JSON.stringify(data, null, 2));
+                clearSession();
+                checkHealth();
+            } catch (error) {
+                showSessionInfo('Error: ' + error.message);
+            }
+        }
+
+        function copySessionId() {
+            if (!sessionId) return;
+            
+            navigator.clipboard.writeText(sessionId).then(() => {
+                showSessionInfo('Session ID copied to clipboard:\n' + sessionId);
+            });
+        }
+
+        function setEndpoint(path) {
+            document.getElementById('endpoint').value = path;
+        }
+
+        function showMessage(type, message, className) {
+            const el = document.getElementById(`${type}Message`);
+            el.innerHTML = `<div class="${className}-message">${message}</div>`;
+        }
+
+        function clearMessage(type) {
+            document.getElementById(`${type}Message`).innerHTML = '';
+        }
+
+        function showAuthResponse(text) {
+            document.getElementById('authResponse').classList.remove('hidden');
+            document.getElementById('authResponseText').textContent = text;
+        }
+
+        function showApiResponse(text) {
+            document.getElementById('apiResponse').classList.remove('hidden');
+            document.getElementById('apiResponseText').textContent = text;
+        }
+
+        function showSessionInfo(text) {
+            document.getElementById('sessionInfo').classList.remove('hidden');
+            document.getElementById('sessionInfoText').textContent = text;
+        }
+    </script>
+</body>
+</html>
