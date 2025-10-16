@@ -4,13 +4,52 @@ Backend API server for EBSCO authentication and Motor API proxy services.
 
 ## Features
 
-- **Motor API Proxy** - Direct proxy to Motor Web Services API (https://api.motor.com)
-- **EBSCO Authentication** - Authenticate with library card to access Motor through EBSCO
+- **Motor API Proxy** - Direct HTTP proxy to Motor Web Services API
+- **EBSCO Authentication** - Authenticate with library card using automated Puppeteer browser
 - **Session Management** - Cached credentials with automatic expiration
 - **Interactive Web Frontend** - User-friendly interface for API interaction
 - **OpenAPI/Swagger Documentation** - Complete API specification with downloadable swagger.json
 - CORS enabled for cross-origin requests
 - Runs on port 3001
+
+## Architecture
+
+### Two-Stage Design
+
+This server uses a **two-stage architecture** that clearly separates authentication from API usage:
+
+#### Stage 1: Authentication (Uses Puppeteer)
+- **Endpoint:** `POST /api/auth`
+- **Method:** Automated browser (Puppeteer)
+- **Purpose:** Navigate EBSCO OAuth flow to obtain Motor API credentials
+- **Process:**
+  1. Launch headless Chrome browser
+  2. Navigate to EBSCO login page
+  3. Fill in library card number
+  4. Follow OAuth redirects to Motor
+  5. Extract Motor API cookies and credentials
+  6. Return session ID with credentials
+- **Why Puppeteer?** EBSCO's OAuth flow requires JavaScript execution and handles redirects that are difficult to follow with plain HTTP
+
+#### Stage 2: Motor API Calls (Uses Direct HTTP)
+- **Endpoint:** `ALL /api/motor/*`
+- **Method:** Direct HTTP requests with axios
+- **Purpose:** Proxy authenticated requests to Motor API
+- **Process:**
+  1. Receive request with session ID
+  2. Look up Motor cookies from session
+  3. Make direct HTTP request to Motor API
+  4. Forward JSON response to client
+- **Why Direct HTTP?** Fast, efficient, scalable - no browser overhead needed after authentication
+
+### Key Principle
+
+> **EBSCO is only used for authentication. All Motor API calls are direct HTTP requests.**
+
+This design provides the best of both worlds:
+- ✅ Reliable authentication (Puppeteer handles complex OAuth)
+- ✅ Fast API calls (direct HTTP, sub-second responses)
+- ✅ Low resource usage (no browser for each API request)
 
 ## Installation
 
@@ -210,12 +249,37 @@ Full Motor API documentation is available in the `motor swagger.json` file.
 
 ## Web Interface
 
-Access the interactive web interface at `http://localhost:3001`
+Access the interactive web interfaces:
 
-The interface provides:
-- **Authentication** - Form to authenticate with EBSCO
-- **Motor API** - Test Motor API endpoints
-- **API Documentation** - Complete API reference
+### 🚗 **Motor API Swagger Test Interface** (Recommended)
+**URL:** `http://localhost:3001/swagger-test.html`
+
+**Features:**
+- 📚 Auto-generated from swagger.json
+- 🎯 One-click example tests with Quick Fill buttons
+- 🔐 Automatic session management
+- 📊 Real-time response visualization
+- ⚡ Pre-configured Motor API endpoint examples
+
+**Quick Fill Examples:**
+- Get Years: `m1/api/years`
+- Get Makes: `m1/api/year/2024/makes`
+- Get Models: `m1/api/year/2024/make/Cadillac/models`
+- Get Vehicle: `m1/api/source/GeneralMotors/100347105/motorvehicles`
+
+[📖 See full documentation](./SWAGGER_TEST_INTERFACE.md)
+
+### 🧪 **Advanced Test Interface**
+**URL:** `http://localhost:3001/test.html`
+
+Full-featured testing interface with manual endpoint input and advanced controls.
+
+### 📄 **Main Interface**
+**URL:** `http://localhost:3001/`
+
+Traditional form-based interface with documentation and API reference.
+
+---
 
 ## Authentication Flow
 

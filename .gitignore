@@ -1,4 +1,55 @@
+# Dependencies
 node_modules/
+package-lock.json
+
+# Environment variables
 .env
-.DS_Store
+.env.local
+.env.*.local
+
+# Logs
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Test files with secrets
+/tmp/
+*.har
+Traffic-Capture-*.har
+sites.motor.com.har
+motor*.har
+
+# Chromium downloads from Puppeteer
+.local-chromium/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+
+# Sensitive config files
+config.json
+secrets.json
+credentials.json
+
+# Test output
+test-results/
+coverage/

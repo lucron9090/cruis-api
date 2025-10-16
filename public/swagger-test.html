@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor API - Swagger Test Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .status-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .status-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .status-connected { color: #28a745; }
+        .status-disconnected { color: #dc3545; }
+        .status-info { color: #17a2b8; }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .endpoint-group {
+            margin-bottom: 20px;
+        }
+
+        .endpoint-group-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #764ba2;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .endpoint-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .endpoint-item:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+
+        .endpoint-item.active {
+            background: #e7f0ff;
+            border-color: #667eea;
+        }
+
+        .method-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .method-get { background: #28a745; }
+        .method-post { background: #007bff; }
+        .method-put { background: #ffc107; color: #333; }
+        .method-delete { background: #dc3545; }
+
+        .endpoint-path {
+            font-size: 12px;
+            color: #666;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .content-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .endpoint-header {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .endpoint-header h2 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .endpoint-header .description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .auth-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .auth-section h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            font-family: 'Courier New', monospace;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .response-section {
+            margin-top: 30px;
+        }
+
+        .response-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .response-box {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .response-box pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #d4d4d4;
+        }
+
+        .response-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .response-meta-item {
+            display: flex;
+            gap: 5px;
+        }
+
+        .response-meta-label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .response-meta-value {
+            color: #333;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .parameters-section {
+            margin-bottom: 20px;
+        }
+
+        .parameters-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .parameter-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .parameter-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .parameter-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .parameter-required {
+            background: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .parameter-type {
+            background: #6c757d;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .parameter-description {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .quick-fill {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .quick-fill button {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-fill button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚗 Motor API - Interactive Test Interface</h1>
+            <p>Swagger-based endpoint testing with live examples</p>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-label">Server Status</div>
+                <div class="status-value" id="serverStatus">Checking...</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Session Status</div>
+                <div class="status-value status-info" id="sessionStatus">Not Authenticated</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Active Sessions</div>
+                <div class="status-value" id="activeSessions">0</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar with Endpoints -->
+            <div class="sidebar">
+                <h3>📚 API Endpoints</h3>
+                <div id="endpointsList"></div>
+            </div>
+
+            <!-- Content Panel -->
+            <div class="content-panel">
+                <div id="welcomeScreen">
+                    <h2>Welcome to Motor API Test Interface</h2>
+                    <p style="color: #666; margin: 20px 0;">Select an endpoint from the sidebar to start testing, or authenticate first to access Motor API endpoints.</p>
+                    
+                    <div class="auth-section">
+                        <h3>🔐 Quick Start: Authentication</h3>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">
+                            Start by authenticating with your library card to get a session ID for Motor API access.
+                        </p>
+                        <button class="btn btn-primary" onclick="loadEndpoint('/api/auth', 'POST')">
+                            Go to Authentication →
+                        </button>
+                    </div>
+                </div>
+
+                <div id="endpointContent" class="hidden">
+                    <!-- Dynamic endpoint content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let sessionId = localStorage.getItem('motorSessionId') || null;
+        let swaggerData = null;
+        let currentEndpoint = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSwaggerData();
+            renderEndpointsList();
+            checkHealth();
+            updateSessionStatus();
+        });
+
+        // Load Swagger JSON
+        async function loadSwaggerData() {
+            try {
+                const response = await fetch('/swagger.json');
+                swaggerData = await response.json();
+            } catch (error) {
+                console.error('Failed to load Swagger data:', error);
+            }
+        }
+
+        // Render endpoints list
+        function renderEndpointsList() {
+            if (!swaggerData) return;
+
+            const container = document.getElementById('endpointsList');
+            const groups = {
+                'Authentication': [],
+                'Motor API': [],
+                'Proxy': [],
+                'Health': []
+            };
+
+            // Group endpoints
+            for (const [path, methods] of Object.entries(swaggerData.paths)) {
+                for (const [method, details] of Object.entries(methods)) {
+                    const tag = details.tags?.[0] || 'Other';
+                    const group = tag === 'Authentication' ? 'Authentication' :
+                                 path.includes('/motor') ? 'Motor API' :
+                                 tag === 'Proxy' ? 'Proxy' : 'Health';
+                    
+                    groups[group].push({ path, method, details });
+                }
+            }
+
+            // Render groups
+            let html = '';
+            for (const [groupName, endpoints] of Object.entries(groups)) {
+                if (endpoints.length === 0) continue;
+                
+                html += `
+                    <div class="endpoint-group">
+                        <div class="endpoint-group-title">${groupName}</div>
+                        ${endpoints.map(ep => `
+                            <div class="endpoint-item" onclick="loadEndpoint('${ep.path}', '${ep.method.toUpperCase()}')">
+                                <span class="method-badge method-${ep.method.toLowerCase()}">${ep.method.toUpperCase()}</span>
+                                <span class="endpoint-path" title="${ep.path}">${ep.path}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Load endpoint details
+        function loadEndpoint(path, method) {
+            currentEndpoint = { path, method: method.toLowerCase() };
+            const endpoint = swaggerData.paths[path][method.toLowerCase()];
+            
+            // Hide welcome, show content
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('endpointContent').classList.remove('hidden');
+
+            // Highlight active endpoint
+            document.querySelectorAll('.endpoint-item').forEach(el => el.classList.remove('active'));
+            event?.target?.closest('.endpoint-item')?.classList.add('active');
+
+            // Render endpoint content
+            renderEndpointContent(path, method, endpoint);
+        }
+
+        // Render endpoint content
+        function renderEndpointContent(path, method, endpoint) {
+            const container = document.getElementById('endpointContent');
+            
+            // Extract parameters
+            const pathParams = endpoint.parameters?.filter(p => p.in === 'path') || [];
+            const headerParams = endpoint.parameters?.filter(p => p.in === 'header') || [];
+            const hasBody = endpoint.requestBody?.content?.['application/json'];
+            
+            // Build quick fill examples for Motor API endpoints
+            let quickFillHtml = '';
+            if (path.includes('/motor')) {
+                quickFillHtml = `
+                    <div class="quick-fill">
+                        <button onclick="quickFillExample('years')">📅 Get Years</button>
+                        <button onclick="quickFillExample('makes')">🏭 Get Makes (2024)</button>
+                        <button onclick="quickFillExample('models')">🚗 Get Models (2024 Cadillac)</button>
+                        <button onclick="quickFillExample('vehicle')">📋 Get Vehicle Info</button>
+                    </div>
+                `;
+            }
+
+            let html = `
+                <div class="endpoint-header">
+                    <h2>
+                        <span class="method-badge method-${method.toLowerCase()}">${method}</span>
+                        ${path}
+                    </h2>
+                    <div class="description">${endpoint.description || endpoint.summary || ''}</div>
+                </div>
+
+                ${quickFillHtml}
+
+                <div id="alertContainer"></div>
+
+                <form id="requestForm" onsubmit="sendRequest(event)">
+            `;
+
+            // Path Parameters
+            if (pathParams.length > 0) {
+                html += `
+                    <div class="parameters-section">
+                        <h3>Path Parameters</h3>
+                        ${pathParams.map(param => `
+                            <div class="form-group">
+                                <label>
+                                    ${param.name}
+                                    ${param.required ? '<span style="color: #dc3545;">*</span>' : ''}
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="param-${param.name}" 
+                                    placeholder="${param.example || param.description || ''}"
+                                    ${param.required ? 'required' : ''}
+                                >
+                                <small style="color: #666; font-size: 12px;">${param.description || ''}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Header Parameters (except X-Auth-Token which is auto-filled)
+            const manualHeaders = headerParams.filter(p => p.name !== 'X-Auth-Token');
+            if (manualHeaders.length > 0) {
+                html += `
+                    <div class="parameters-section">
+                        <h3>Headers</h3>
+                        ${manualHeaders.map(param => `
+                            <div class="form-group">
+                                <label>
+                                    ${param.name}
+                                    ${param.required ? '<span style="color: #dc3545;">*</span>' : ''}
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="header-${param.name}" 
+                                    placeholder="${param.example || param.description || ''}"
+                                    ${param.required ? 'required' : ''}
+                                >
+                                <small style="color: #666; font-size: 12px;">${param.description || ''}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Request Body for POST endpoints
+            if (path === '/api/auth') {
+                html += `
+                    <div class="parameters-section">
+                        <h3>Request Body</h3>
+                        <div class="form-group">
+                            <label>Card Number <span style="color: #dc3545;">*</span></label>
+                            <input 
+                                type="text" 
+                                id="body-cardNumber" 
+                                placeholder="1001600244772"
+                                required
+                            >
+                            <small style="color: #666; font-size: 12px;">Your library card number</small>
+                        </div>
+                    </div>
+                `;
+            } else if (hasBody) {
+                const schema = endpoint.requestBody.content['application/json'].schema;
+                html += `
+                    <div class="parameters-section">
+                        <h3>Request Body</h3>
+                        <div class="form-group">
+                            <label>JSON Body</label>
+                            <textarea 
+                                id="requestBody" 
+                                placeholder='${JSON.stringify(schema.example || {}, null, 2)}'
+                            ></textarea>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Submit button
+            html += `
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span id="submitText">🚀 Send Request</span>
+                    </button>
+                </form>
+
+                <div class="response-section hidden" id="responseSection">
+                    <h3>Response</h3>
+                    <div class="response-meta" id="responseMeta"></div>
+                    <div class="response-box">
+                        <pre id="responseBody"></pre>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Quick fill examples for Motor API
+        function quickFillExample(type) {
+            const examples = {
+                years: { endpoint: 'm1/api/years' },
+                makes: { endpoint: 'm1/api/year/2024/makes' },
+                models: { endpoint: 'm1/api/year/2024/make/Cadillac/models' },
+                vehicle: { endpoint: 'm1/api/source/GeneralMotors/100347105/motorvehicles' }
+            };
+
+            const example = examples[type];
+            if (!example) return;
+
+            // Parse the endpoint to fill parameters
+            const parts = example.endpoint.split('/');
+            
+            // Find all input fields and fill them
+            if (type === 'years') {
+                const input = document.querySelector('input[id*="param"]');
+                if (input) input.value = 'm1/api/years';
+            } else if (type === 'makes') {
+                document.querySelectorAll('input[id*="param"]').forEach((input, i) => {
+                    if (i === 0) input.value = 'm1/api/year/2024/makes';
+                });
+            } else if (type === 'models') {
+                document.querySelectorAll('input[id*="param"]').forEach((input, i) => {
+                    if (i === 0) input.value = 'm1/api/year/2024/make/Cadillac/models';
+                });
+            } else if (type === 'vehicle') {
+                document.querySelectorAll('input[id*="param"]').forEach((input, i) => {
+                    if (i === 0) input.value = 'm1/api/source/GeneralMotors/100347105/motorvehicles';
+                });
+            }
+
+            showAlert('Example loaded! Click "Send Request" to test.', 'info');
+        }
+
+        // Send request
+        async function sendRequest(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            submitBtn.disabled = true;
+            submitText.innerHTML = '<span class="loading"></span> Sending...';
+
+            clearAlert();
+
+            try {
+                // Build URL
+                let url = currentEndpoint.path;
+                
+                // Replace path parameters
+                const pathParams = document.querySelectorAll('[id^="param-"]');
+                pathParams.forEach(input => {
+                    const paramName = input.id.replace('param-', '');
+                    url = url.replace(`{${paramName}}`, input.value);
+                });
+
+                // For Motor API proxy, use the endpoint value directly
+                if (url.includes('/motor/')) {
+                    const endpointInput = document.querySelector('[id*="param"]');
+                    if (endpointInput) {
+                        url = `/api/motor/${endpointInput.value}`;
+                    }
+                }
+
+                // Build headers
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                // Add session ID if available and required
+                if (sessionId && url.includes('/motor')) {
+                    headers['X-Session-Id'] = sessionId;
+                }
+
+                // Add custom headers
+                const headerInputs = document.querySelectorAll('[id^="header-"]');
+                headerInputs.forEach(input => {
+                    const headerName = input.id.replace('header-', '');
+                    headers[headerName] = input.value;
+                });
+
+                // Build body
+                let body = null;
+                if (currentEndpoint.path === '/api/auth') {
+                    const cardNumber = document.getElementById('body-cardNumber')?.value;
+                    body = JSON.stringify({ cardNumber });
+                } else if (document.getElementById('requestBody')) {
+                    const bodyText = document.getElementById('requestBody').value;
+                    body = bodyText ? bodyText : null;
+                }
+
+                // Send request
+                const startTime = Date.now();
+                const response = await fetch(url, {
+                    method: currentEndpoint.method.toUpperCase(),
+                    headers,
+                    body
+                });
+                const duration = Date.now() - startTime;
+
+                // Parse response
+                const contentType = response.headers.get('content-type');
+                let responseData;
+                if (contentType?.includes('application/json')) {
+                    responseData = await response.json();
+                } else {
+                    responseData = await response.text();
+                }
+
+                // Handle successful authentication
+                if (currentEndpoint.path === '/api/auth' && responseData.success) {
+                    sessionId = responseData.sessionId;
+                    localStorage.setItem('motorSessionId', sessionId);
+                    updateSessionStatus();
+                    showAlert('✅ Authentication successful! Session saved.', 'success');
+                }
+
+                // Show response
+                showResponse(response.status, duration, contentType, responseData);
+
+                if (response.ok) {
+                    showAlert(`✅ Request successful (${response.status})`, 'success');
+                } else {
+                    showAlert(`⚠️ Request failed (${response.status})`, 'error');
+                }
+
+            } catch (error) {
+                showAlert(`❌ Error: ${error.message}`, 'error');
+                showResponse(0, 0, 'error', error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitText.textContent = '🚀 Send Request';
+            }
+        }
+
+        // Show response
+        function showResponse(status, duration, contentType, data) {
+            const section = document.getElementById('responseSection');
+            const meta = document.getElementById('responseMeta');
+            const body = document.getElementById('responseBody');
+
+            section.classList.remove('hidden');
+
+            const statusColor = status >= 200 && status < 300 ? '#28a745' : 
+                               status >= 400 ? '#dc3545' : '#6c757d';
+
+            meta.innerHTML = `
+                <div class="response-meta-item">
+                    <span class="response-meta-label">Status:</span>
+                    <span class="response-meta-value" style="color: ${statusColor};">${status}</span>
+                </div>
+                <div class="response-meta-item">
+                    <span class="response-meta-label">Duration:</span>
+                    <span class="response-meta-value">${duration}ms</span>
+                </div>
+                <div class="response-meta-item">
+                    <span class="response-meta-label">Content-Type:</span>
+                    <span class="response-meta-value">${contentType || 'N/A'}</span>
+                </div>
+            `;
+
+            body.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+
+        // Clear alert
+        function clearAlert() {
+            document.getElementById('alertContainer').innerHTML = '';
+        }
+
+        // Check health
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                document.getElementById('serverStatus').textContent = 'Connected';
+                document.getElementById('serverStatus').className = 'status-value status-connected';
+                document.getElementById('activeSessions').textContent = data.activeSessions || 0;
+            } catch (error) {
+                document.getElementById('serverStatus').textContent = 'Disconnected';
+                document.getElementById('serverStatus').className = 'status-value status-disconnected';
+            }
+        }
+
+        // Update session status
+        function updateSessionStatus() {
+            const statusEl = document.getElementById('sessionStatus');
+            
+            if (sessionId) {
+                const shortId = sessionId.substring(0, 8) + '...';
+                statusEl.textContent = `Active (${shortId})`;
+                statusEl.className = 'status-value status-connected';
+            } else {
+                statusEl.textContent = 'Not Authenticated';
+                statusEl.className = 'status-value status-info';
+            }
+        }
+
+        // Check health periodically
+        setInterval(checkHealth, 30000);
+    </script>
+</body>
+</html>

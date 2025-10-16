@@ -1,31 +1,30 @@
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-const puppeteer = require('puppeteer');
-const { v4: uuidv4 } = require('uuid');
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
+
+admin.initializeApp();
 
 const app = express();
-const PORT = 3001;
-
-// Middleware
-app.use(cors());
+app.use(cors({ origin: true }));
 app.use(express.json());
-app.use(express.static('public'));
 
-// Session storage
-const sessions = new Map();
+// Use Firestore for session storage
+const db = admin.firestore();
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
-    activeSessions: sessions.size,
     timestamp: new Date().toISOString()
   });
 });
 
 // Step 1: Authenticate with EBSCO and capture Motor cookies
-app.post('/api/auth', async (req, res) => {
+app.post('/auth', async (req, res) => {
   const { cardNumber } = req.body;
   
   if (!cardNumber) {
@@ -34,12 +33,14 @@ app.post('/api/auth', async (req, res) => {
 
   let browser;
   try {
-    console.log(`\n[AUTH] Starting authentication for card: ${cardNumber}`);
+    console.log(`[AUTH] Starting authentication for card: ${cardNumber}`);
     
-    // Launch Puppeteer
+    // Launch Puppeteer with Chromium for serverless
     browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     });
     
     const page = await browser.newPage();
@@ -47,7 +48,7 @@ app.post('/api/auth', async (req, res) => {
     
     console.log('[AUTH] Navigating to EBSCO login...');
     
-    // Navigate to EBSCO login page (this will redirect through OAuth flow to Motor)
+    // Navigate to EBSCO login page
     await page.goto('https://search.ebscohost.com/login.aspx?authtype=ip,cpid&custid=s5672256&groupid=main&profile=autorepso', {
       waitUntil: 'networkidle2',
       timeout: 30000
@@ -97,10 +98,7 @@ app.post('/api/auth', async (req, res) => {
             const decoded = Buffer.from(authCookie.value, 'base64').toString('utf-8');
             const credentials = JSON.parse(decoded);
             
-            console.log('[AUTH] ✓ Extracted credentials:');
-            console.log(`  PublicKey: ${credentials.PublicKey}`);
-            console.log(`  ApiTokenKey: ${credentials.ApiTokenKey}`);
-            console.log(`  Expiration: ${credentials.ApiTokenExpiration}`);
+            console.log('[AUTH] ✓ Extracted credentials');
             
             // Store all cookies as a cookie string
             const cookieString = motorDomainCookies
@@ -123,11 +121,13 @@ app.post('/api/auth', async (req, res) => {
     await browser.close();
     
     if (motorCookies) {
-      // Create session
-      const sessionId = uuidv4();
-      sessions.set(sessionId, {
+      // Create session in Firestore
+      const sessionDoc = db.collection('sessions').doc();
+      const sessionId = sessionDoc.id;
+      
+      await sessionDoc.set({
         credentials: motorCookies,
-        createdAt: new Date(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
         expiresAt: new Date(motorCookies.ApiTokenExpiration || Date.now() + 24 * 60 * 60 * 1000)
       });
       
@@ -164,8 +164,7 @@ app.post('/api/auth', async (req, res) => {
 });
 
 // Step 2: Proxy Motor API requests using direct HTTP calls
-app.all('/api/motor/*', async (req, res) => {
-  const axios = require('axios');
+app.all('/motor/*', async (req, res) => {
   const motorPath = req.params[0];
   const sessionId = req.headers['x-session-id'];
   
@@ -173,21 +172,25 @@ app.all('/api/motor/*', async (req, res) => {
     return res.status(401).json({ error: 'x-session-id header is required' });
   }
   
-  const session = sessions.get(sessionId);
-  if (!session) {
-    return res.status(401).json({ error: 'Invalid or expired session' });
-  }
-  
-  // Check expiration
-  if (session.expiresAt && new Date() > session.expiresAt) {
-    sessions.delete(sessionId);
-    return res.status(401).json({ error: 'Session expired' });
-  }
-  
-  const credentials = session.credentials;
-  
   try {
-    console.log(`\n[MOTOR API] ${req.method} /api/motor/${motorPath}`);
+    // Get session from Firestore
+    const sessionDoc = await db.collection('sessions').doc(sessionId).get();
+    
+    if (!sessionDoc.exists) {
+      return res.status(401).json({ error: 'Invalid or expired session' });
+    }
+    
+    const session = sessionDoc.data();
+    
+    // Check expiration
+    if (session.expiresAt && new Date() > session.expiresAt.toDate()) {
+      await sessionDoc.ref.delete();
+      return res.status(401).json({ error: 'Session expired' });
+    }
+    
+    const credentials = session.credentials;
+    
+    console.log(`[MOTOR API] ${req.method} /motor/${motorPath}`);
     console.log(`[MOTOR API] Session: ${sessionId}`);
     
     // Build target URL - direct to Motor API
@@ -249,7 +252,7 @@ app.all('/api/motor/*', async (req, res) => {
       
       return res.status(400).json({
         error: 'HTML_RESPONSE',
-        message: 'Motor API returned HTML instead of JSON. This usually means the endpoint is incorrect or the session expired.',
+        message: 'Motor API returned HTML instead of JSON.',
         suggestions: [
           'Use /m1/api/ endpoints for JSON responses',
           'Example: /m1/api/years',
@@ -278,40 +281,23 @@ app.all('/api/motor/*', async (req, res) => {
 });
 
 // Delete session
-app.delete('/api/session/:sessionId', (req, res) => {
+app.delete('/session/:sessionId', async (req, res) => {
   const { sessionId } = req.params;
   
-  if (sessions.has(sessionId)) {
-    sessions.delete(sessionId);
+  try {
+    await db.collection('sessions').doc(sessionId).delete();
     console.log(`[SESSION] Deleted: ${sessionId}`);
     return res.json({ success: true, message: 'Session deleted' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to delete session' });
   }
-  
-  return res.status(404).json({ error: 'Session not found' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`\n${'='.repeat(60)}`);
-  console.log(`Motor API Proxy Server`);
-  console.log(`${'='.repeat(60)}`);
-  console.log(`\nServer running on http://localhost:${PORT}`);
-  console.log(`\nArchitecture:`);
-  console.log(`  ✓ Stage 1: EBSCO auth uses Puppeteer (automated browser)`);
-  console.log(`  ✓ Stage 2: Motor API uses direct HTTP (fast & efficient)`);
-  console.log(`\nEndpoints:`);
-  console.log(`  POST   /api/auth                - Authenticate via EBSCO (Puppeteer)`);
-  console.log(`  ALL    /api/motor/*             - Motor API proxy (Direct HTTP)`);
-  console.log(`  DELETE /api/session/:sessionId  - Delete session`);
-  console.log(`  GET    /health                  - Health check`);
-  console.log(`\nUsage:`);
-  console.log(`  1. Authenticate (uses Puppeteer for EBSCO OAuth):`);
-  console.log(`     curl -X POST http://localhost:${PORT}/api/auth \\`);
-  console.log(`       -H 'Content-Type: application/json' \\`);
-  console.log(`       -d '{"cardNumber":"1001600244772"}'`);
-  console.log(`\n  2. Call Motor API (direct HTTP with session):`);
-  console.log(`     curl http://localhost:${PORT}/api/motor/m1/api/years \\`);
-  console.log(`       -H 'X-Session-Id: YOUR_SESSION_ID'`);
-  console.log(`\nWeb Interface: http://localhost:${PORT}/swagger-test.html`);
-  console.log(`${'='.repeat(60)}\n`);
-});
+// Export the Express app as a Firebase Function
+exports.api = functions
+  .runWith({
+    timeoutSeconds: 540,
+    memory: '2GB'
+  })
+  .https
+  .onRequest(app);

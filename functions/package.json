@@ -1,0 +1,21 @@
+{
+  "name": "functions",
+  "description": "Motor API proxy Firebase Functions",
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-functions": "^4.5.0",
+    "firebase-admin": "^11.11.0",
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "axios": "^1.12.2",
+    "puppeteer-core": "^21.0.0",
+    "@sparticuz/chromium": "^119.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
+}
