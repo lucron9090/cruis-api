@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUIS API - EBSCO Authentication & Proxy Service</title>
+    <title>CRUIS API - Motor API Proxy Service</title>
     <style>
         * {
             margin: 0;
@@ -257,11 +257,11 @@
     <div class="container">
         <header>
             <h1>🚀 CRUIS API</h1>
-            <p class="subtitle">EBSCO Authentication & Proxy Service</p>
+            <p class="subtitle">Motor API Proxy Service</p>
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('overview')">Overview</button>
                 <button class="tab" onclick="switchTab('auth')">Authentication</button>
-                <button class="tab" onclick="switchTab('proxy')">Proxy Request</button>
+                <button class="tab" onclick="switchTab('proxy')">Motor API</button>
                 <button class="tab" onclick="switchTab('swagger')">API Documentation</button>
             </div>
         </header>
@@ -270,7 +270,7 @@
         <div id="overview" class="tab-content active">
             <h2>Welcome to CRUIS API</h2>
             <p style="margin: 20px 0; color: #666;">
-                This API provides a seamless way to authenticate with EBSCO services and proxy authenticated requests.
+                This API provides authenticated access to Motor Web Services API. Authentication is handled through EBSCO (initial login only), then all Motor API endpoints are available.
             </p>
 
             <div class="info-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 20px;">
@@ -293,18 +293,23 @@
             <ul class="endpoint-list">
                 <li class="endpoint-item">
                     <span class="method-badge method-post">POST</span>
-                    <span class="endpoint-path">/api/auth/ebsco</span>
-                    <div class="endpoint-description">Authenticate with EBSCO using library card credentials</div>
+                    <span class="endpoint-path">/api/auth</span>
+                    <div class="endpoint-description">Authenticate with library card (EBSCO OAuth handled internally)</div>
                 </li>
                 <li class="endpoint-item">
                     <span class="method-badge method-get">GET</span>
-                    <span class="endpoint-path">/api/ebsco-proxy/*</span>
-                    <div class="endpoint-description">Proxy GET requests to EBSCO services with authentication</div>
+                    <span class="endpoint-path">/api/motor/*</span>
+                    <div class="endpoint-description">Proxy Motor API requests with session</div>
                 </li>
                 <li class="endpoint-item">
                     <span class="method-badge method-post">POST</span>
-                    <span class="endpoint-path">/api/ebsco-proxy/*</span>
-                    <div class="endpoint-description">Proxy POST requests to EBSCO services with authentication</div>
+                    <span class="endpoint-path">/api/motor/*</span>
+                    <div class="endpoint-description">Proxy Motor API POST requests with session</div>
+                </li>
+                <li class="endpoint-item">
+                    <span class="method-badge method-delete">DELETE</span>
+                    <span class="endpoint-path">/api/session/:id</span>
+                    <div class="endpoint-description">Delete authentication session</div>
                 </li>
                 <li class="endpoint-item">
                     <span class="method-badge method-get">GET</span>
@@ -316,20 +321,15 @@
 
         <!-- Authentication Tab -->
         <div id="auth" class="tab-content">
-            <h2>EBSCO Authentication</h2>
+            <h2>Authentication</h2>
             <p style="margin: 20px 0; color: #666;">
-                Enter your library card credentials to obtain an authentication token.
+                Enter your library card number to authenticate. The server handles EBSCO OAuth internally and returns Motor API credentials.
             </p>
 
             <form id="authForm" onsubmit="handleAuth(event)">
                 <div class="form-group">
                     <label for="cardNumber">Library Card Number</label>
                     <input type="text" id="cardNumber" name="cardNumber" placeholder="1001600244772" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password (optional)</label>
-                    <input type="password" id="password" name="password" placeholder="Enter your password (optional)">
                 </div>
 
                 <button type="submit" id="authButton">Authenticate</button>
@@ -340,15 +340,15 @@
 
         <!-- Proxy Tab -->
         <div id="proxy" class="tab-content">
-            <h2>Proxy Request</h2>
+            <h2>Motor API Requests</h2>
             <p style="margin: 20px 0; color: #666;">
-                Make authenticated requests to EBSCO services using your auth token.
+                Make authenticated requests to Motor API using your session ID.
             </p>
 
             <form id="proxyForm" onsubmit="handleProxy(event)">
                 <div class="form-group">
-                    <label for="authToken">Auth Token</label>
-                    <input type="text" id="authToken" name="authToken" placeholder="Paste your auth token here" required>
+                    <label for="authToken">Session ID</label>
+                    <input type="text" id="authToken" name="authToken" placeholder="Paste your session ID here" required>
                 </div>
 
                 <div class="form-group">
@@ -362,10 +362,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="targetPath">Target Path</label>
-                    <input type="text" id="targetPath" name="targetPath" placeholder="search.ebscohost.com/api/v1/search" required>
+                    <label for="targetPath">Motor API Path</label>
+                    <input type="text" id="targetPath" name="targetPath" placeholder="m1/api/years" required>
                     <small style="color: #666; display: block; margin-top: 5px;">
-                        Enter the full path after the EBSCO domain (e.g., search.ebscohost.com/api/v1/search)
+                        Enter the Motor API path (e.g., m1/api/years, m1/api/year/2024/makes)
                     </small>
                 </div>
 
@@ -403,19 +403,26 @@
                 <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #49cc90;">
                     <h4 style="margin: 0 0 10px 0; color: #333;">
                         <span class="method-badge method-post">POST</span>
-                        /api/auth/ebsco
+                        /api/auth
                     </h4>
-                    <p style="color: #666; margin-bottom: 15px;">Authenticate with EBSCO using library card credentials and return an authentication token.</p>
+                    <p style="color: #666; margin-bottom: 15px;">Authenticate with library card. Server handles EBSCO OAuth internally and returns Motor API session.</p>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Request Body:</strong>
                                         <pre style="margin: 0;">{
     "cardNumber": "1001600244772"
-    // "password": "your-password" (optional)
 }</pre>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Response (200 OK):</strong>
                     <pre style="margin: 0;">{
-  "authToken": "ebsco-auth-cookie-value"
+  "success": true,
+  "sessionId": "uuid-here",
+  "credentials": {
+    "PublicKey": "...",
+    "ApiTokenKey": "...",
+    "ApiTokenExpiration": "...",
+    "UserName": "...",
+    "Subscriptions": [...]
+  }
 }</pre>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Error Responses:</strong>
@@ -429,41 +436,41 @@
                 <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #61affe;">
                     <h4 style="margin: 0 0 10px 0; color: #333;">
                         <span class="method-badge method-get">GET</span>
-                        /api/ebsco-proxy/{path}
+                        /api/motor/{path}
                     </h4>
-                    <p style="color: #666; margin-bottom: 15px;">Proxy authenticated GET requests to EBSCO services.</p>
+                    <p style="color: #666; margin-bottom: 15px;">Proxy Motor API GET requests with session authentication.</p>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Required Headers:</strong>
-                    <pre style="margin: 0;">X-Auth-Token: your-auth-token-here</pre>
+                    <pre style="margin: 0;">X-Session-Id: your-session-id-here</pre>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Path Parameter:</strong>
                     <ul style="margin: 5px 0; padding-left: 20px; color: #666;">
-                        <li><strong>path</strong> - The target path after EBSCO domain (e.g., search.ebscohost.com/api/v1/search)</li>
+                        <li><strong>path</strong> - Motor API path (e.g., m1/api/years, m1/api/year/2024/makes)</li>
                     </ul>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Example:</strong>
-                    <pre style="margin: 0;">GET /api/ebsco-proxy/search.ebscohost.com/api/v1/search
-X-Auth-Token: your-auth-token</pre>
+                    <pre style="margin: 0;">GET /api/motor/m1/api/years
+X-Session-Id: your-session-id</pre>
                 </div>
 
                 <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #49cc90;">
                     <h4 style="margin: 0 0 10px 0; color: #333;">
                         <span class="method-badge method-post">POST</span>
-                        /api/ebsco-proxy/{path}
+                        /api/motor/{path}
                     </h4>
-                    <p style="color: #666; margin-bottom: 15px;">Proxy authenticated POST requests to EBSCO services.</p>
+                    <p style="color: #666; margin-bottom: 15px;">Proxy Motor API POST requests with session authentication.</p>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Required Headers:</strong>
-                    <pre style="margin: 0;">X-Auth-Token: your-auth-token-here
+                    <pre style="margin: 0;">X-Session-Id: your-session-id-here
 Content-Type: application/json</pre>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Path Parameter:</strong>
                     <ul style="margin: 5px 0; padding-left: 20px; color: #666;">
-                        <li><strong>path</strong> - The target path after EBSCO domain</li>
+                        <li><strong>path</strong> - Motor API path</li>
                     </ul>
                     
                     <strong style="display: block; margin: 15px 0 5px 0; color: #333;">Request Body:</strong>
-                    <pre style="margin: 0;">Optional JSON payload for the proxied request</pre>
+                    <pre style="margin: 0;">Optional JSON payload for the Motor API request</pre>
                 </div>
 
                 <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #61affe;">
@@ -482,12 +489,16 @@ Content-Type: application/json</pre>
                 <div style="margin-top: 40px; padding: 20px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #2196F3;">
                     <h4 style="margin: 0 0 10px 0; color: #1976D2;">Authentication Flow</h4>
                     <ol style="margin: 10px 0; padding-left: 20px; color: #666; line-height: 1.8;">
-                        <li>GET login page from EBSCO with custId, groupId, profId, and requestIdentifier</li>
-                        <li>POST to login API with library card number</li>
-                        <li>POST to login API with password (optional)</li>
-                        <li>Follow redirects to extract authentication cookie</li>
-                        <li>Return auth token to client</li>
+                        <li>Client sends library card number to /api/auth</li>
+                        <li>Server uses Puppeteer to navigate EBSCO OAuth flow (internal)</li>
+                        <li>Server captures Motor API credentials from successful auth</li>
+                        <li>Server stores session in Firestore/memory</li>
+                        <li>Returns sessionId and Motor API credentials to client</li>
+                        <li>Client uses sessionId for all subsequent Motor API calls</li>
                     </ol>
+                    <p style="margin-top: 15px; color: #666; font-style: italic;">
+                        Note: EBSCO is only used internally for initial authentication. All subsequent API calls go directly to Motor.
+                    </p>
                 </div>
             </div>
         </div>
@@ -522,15 +533,14 @@ Content-Type: application/json</pre>
             
             button.disabled = true;
             button.textContent = 'Authenticating...';
-            responseDiv.innerHTML = '<div class="loading">Processing authentication...</div>';
+            responseDiv.innerHTML = '<div class="loading">Authenticating via EBSCO (this may take 10-30 seconds)...</div>';
 
             const formData = {
-                cardNumber: document.getElementById('cardNumber').value,
-                password: document.getElementById('password').value
+                cardNumber: document.getElementById('cardNumber').value
             };
 
             try {
-                const response = await fetch('/api/auth/ebsco', {
+                const response = await fetch('/api/auth', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -544,10 +554,10 @@ Content-Type: application/json</pre>
                     responseDiv.innerHTML = `
                         <div class="response success">
                             <div class="response-title">✅ Authentication Successful!</div>
-                            <p style="margin: 10px 0;">Your auth token:</p>
+                            <p style="margin: 10px 0;">Your session ID:</p>
                             <pre>${JSON.stringify(data, null, 2)}</pre>
-                            <button onclick="copyAuthToken('${data.authToken}')" style="margin-top: 10px;">
-                                Copy Token to Proxy Tab
+                            <button onclick="copyAuthToken('${data.sessionId}')" style="margin-top: 10px;">
+                                Copy Session ID to Motor API Tab
                             </button>
                         </div>
                     `;
@@ -588,11 +598,11 @@ Content-Type: application/json</pre>
             const targetPath = document.getElementById('targetPath').value;
             const requestBody = document.getElementById('requestBody').value;
 
-            const url = `/api/ebsco-proxy/${targetPath}`;
+            const url = `/api/motor/${targetPath}`;
             const options = {
                 method: method,
                 headers: {
-                    'X-Auth-Token': authToken,
+                    'X-Session-Id': authToken,
                     'Content-Type': 'application/json'
                 }
             };
