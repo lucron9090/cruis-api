@@ -7,297 +7,203 @@ const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
 
 admin.initializeApp();
+const db = admin.firestore();
 
 const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-// Use Firestore for session storage
-const db = admin.firestore();
-
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString()
-  });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Step 1: Authenticate with EBSCO and capture Motor cookies
+// Authentication route - uses EBSCO -> Motor flow via Puppeteer
 app.post('/auth', async (req, res) => {
   const { cardNumber } = req.body;
-  
-  if (!cardNumber) {
-    return res.status(400).json({ error: 'cardNumber is required' });
+  if (!cardNumber) return res.status(400).json({ error: 'cardNumber is required' });
+
+  // correlation id extraction: accept multiple header variants
+  function extractCorrelationId(req) {
+    const hdrs = req.headers || {};
+    const keys = Object.keys(hdrs);
+    for (const k of keys) {
+      const key = k.toLowerCase();
+      if (key === 'x-correlation-id' || key === 'x-correlationid' || key === 'x-correlation' || key === 'xcorrelationid') return hdrs[k];
+    }
+    return null;
   }
 
   let browser;
   try {
-    console.log(`[AUTH] Starting authentication for card: ${cardNumber}`);
-    
-    // Launch Puppeteer with Chromium for serverless
     browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
     });
-    
+
     const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36');
-    
-    console.log('[AUTH] Navigating to EBSCO login...');
-    
-    // Navigate to EBSCO login page
-    await page.goto('https://search.ebscohost.com/login.aspx?authtype=ip,cpid&custid=s5672256&groupid=main&profile=autorepso', {
-      waitUntil: 'networkidle2',
-      timeout: 30000
-    });
-    
-    console.log('[AUTH] Waiting for card number input...');
-    
-    // Wait for and fill card number input
+    await page.setUserAgent('Mozilla/5.0');
+
+    await page.goto('https://search.ebscohost.com/login.aspx?authtype=ip,cpid&custid=s5672256&groupid=main&profile=autorepso', { waitUntil: 'networkidle2', timeout: 30000 });
     await page.waitForSelector('input[data-auto="prompt-input"], input#prompt-input', { timeout: 15000 });
     await page.type('input[data-auto="prompt-input"], input#prompt-input', cardNumber);
-    
-    console.log('[AUTH] Submitting card number...');
-    
-    // Submit form
     await page.click('button[data-auto="login-submit-btn"]');
-    
-    console.log('[AUTH] Waiting for redirect to Motor...');
-    
-    // Wait for navigation to Motor domain
+
     let motorCookies = null;
     let attempts = 0;
     const maxAttempts = 30;
-    
+
     while (attempts < maxAttempts && !motorCookies) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(r => setTimeout(r, 1000));
       attempts++;
-      
       const currentUrl = page.url();
-      console.log(`[AUTH] Attempt ${attempts}: ${currentUrl.substring(0, 60)}...`);
-      
-      // Check if we've reached Motor
       if (currentUrl.includes('motor.com')) {
-        console.log('[AUTH] ✓ Reached Motor domain!');
-        
-        // Get all cookies
         const allCookies = await page.cookies();
         const motorDomainCookies = allCookies.filter(c => c.domain.includes('motor.com'));
-        
-        console.log(`[AUTH] Captured ${motorDomainCookies.length} Motor cookies`);
-        
-        // Find AuthUserInfo cookie
         const authCookie = motorDomainCookies.find(c => c.name === 'AuthUserInfo');
-        
         if (authCookie) {
           try {
-            // Decode AuthUserInfo
             const decoded = Buffer.from(authCookie.value, 'base64').toString('utf-8');
             const credentials = JSON.parse(decoded);
-            
-            console.log('[AUTH] ✓ Extracted credentials');
-            
-            // Store all cookies as a cookie string
-            const cookieString = motorDomainCookies
-              .map(c => `${c.name}=${c.value}`)
-              .join('; ');
-            
-            motorCookies = {
-              ...credentials,
-              _cookieString: cookieString,
-              _cookies: motorDomainCookies
-            };
-            
+            const cookieString = motorDomainCookies.map(c => `${c.name}=${c.value}`).join('; ');
+            motorCookies = { ...credentials, _cookieString: cookieString, _cookies: motorDomainCookies };
           } catch (e) {
-            console.error('[AUTH] Failed to decode AuthUserInfo:', e.message);
+            // ignore parse errors and continue waiting
           }
         }
       }
     }
-    
-    await browser.close();
-    
-    if (motorCookies) {
-      // Create session in Firestore
-      const sessionDoc = db.collection('sessions').doc();
-      const sessionId = sessionDoc.id;
-      
-      await sessionDoc.set({
-        credentials: motorCookies,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        expiresAt: new Date(motorCookies.ApiTokenExpiration || Date.now() + 24 * 60 * 60 * 1000)
-      });
-      
-      console.log(`[AUTH] ✓ Session created: ${sessionId}`);
-      
-      return res.json({
-        success: true,
-        sessionId,
-        credentials: {
-          PublicKey: motorCookies.PublicKey,
-          ApiTokenKey: motorCookies.ApiTokenKey,
-          ApiTokenExpiration: motorCookies.ApiTokenExpiration,
-          UserName: motorCookies.UserName,
-          Subscriptions: motorCookies.Subscriptions
-        }
-      });
-    } else {
-      return res.status(500).json({
-        error: 'Authentication timeout',
-        message: 'Failed to reach Motor domain or extract credentials'
-      });
+
+    if (browser) await browser.close();
+
+    if (!motorCookies) {
+      const failureCorrelation = extractCorrelationId(req) || require('uuid').v4();
+      res.setHeader('X-Correlation-Id', failureCorrelation);
+      return res.status(500).json({ error: 'Authentication timeout', correlationId: failureCorrelation });
     }
-    
-  } catch (error) {
-    console.error('[AUTH] Error:', error.message);
-    if (browser) {
-      await browser.close();
-    }
-    return res.status(500).json({
-      error: 'Authentication failed',
-      message: error.message
+
+    const sessionDoc = db.collection('sessions').doc();
+    const sessionId = sessionDoc.id;
+    await sessionDoc.set({
+      credentials: motorCookies,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      expiresAt: new Date(motorCookies.ApiTokenExpiration || Date.now() + 24 * 60 * 60 * 1000)
     });
+
+    const corr = extractCorrelationId(req) || require('uuid').v4();
+    res.setHeader('X-Correlation-Id', corr);
+    return res.json({ success: true, sessionId, correlationId: corr, credentials: { PublicKey: motorCookies.PublicKey, ApiTokenKey: motorCookies.ApiTokenKey } });
+
+  } catch (error) {
+    if (browser) await browser.close();
+    console.error('[AUTH] Error:', error.message);
+    const correlationId = require('uuid').v4();
+    res.setHeader('X-Correlation-Id', correlationId);
+    return res.status(500).json({ error: 'Authentication failed', correlationId, message: error.message });
   }
 });
 
-// Step 2: Proxy Motor API requests using direct HTTP calls
-app.all('/motor/*', async (req, res) => {
-  const motorPath = req.params[0];
-  const sessionId = req.headers['x-session-id'];
-  
-  if (!sessionId) {
-    return res.status(401).json({ error: 'x-session-id header is required' });
-  }
-  
+// Helper: perform motor proxy using Firestore session
+async function performMotorProxyFirebase(req, res, motorPath, explicitSessionId, explicitUpstream) {
   try {
-    // Get session from Firestore
+    const upstream = (explicitUpstream || req.headers['x-upstream'] || req.query.upstream || 'sites').toLowerCase();
+    const sessionId = explicitSessionId || req.headers['x-session-id'] || req.query.session;
+    if (!sessionId) return res.status(401).json({ error: 'x-session-id header or ?session= is required' });
+
     const sessionDoc = await db.collection('sessions').doc(sessionId).get();
-    
-    if (!sessionDoc.exists) {
-      return res.status(401).json({ error: 'Invalid or expired session' });
-    }
-    
+    if (!sessionDoc.exists) return res.status(401).json({ error: 'Invalid or expired session' });
     const session = sessionDoc.data();
-    
-    // Check expiration
-    if (session.expiresAt && new Date() > session.expiresAt.toDate()) {
+
+    // If expiresAt is a Firestore timestamp, convert; otherwise, if Date, compare directly
+    const expiresAt = session.expiresAt && session.expiresAt.toDate ? session.expiresAt.toDate() : session.expiresAt;
+    if (expiresAt && new Date() > expiresAt) {
       await sessionDoc.ref.delete();
       return res.status(401).json({ error: 'Session expired' });
     }
-    
+
     const credentials = session.credentials;
-    
+
     console.log(`[MOTOR API] ${req.method} /motor/${motorPath}`);
     console.log(`[MOTOR API] Session: ${sessionId}`);
-    
-    // Build target URL - direct to Motor API
-    const targetUrl = `https://sites.motor.com/${motorPath}`;
-    console.log(`[MOTOR API] Requesting: ${targetUrl}`);
-    
-    // Prepare headers with Motor API authentication
+    console.log(`[MOTOR API] Upstream selected: ${upstream}`);
+
+    let targetUrl;
+    if (upstream === 'api') {
+      const cleaned = motorPath.replace(/^\/+/, '');
+      targetUrl = `https://api.motor.com/v1/${cleaned}`;
+    } else {
+      targetUrl = `https://sites.motor.com/${motorPath}`;
+    }
+
     const headers = {
       'Accept': 'application/json, text/plain, */*',
       'Content-Type': 'application/json',
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+      'User-Agent': 'Mozilla/5.0',
       'Cookie': credentials._cookieString,
-      'Referer': 'https://sites.motor.com/m1/',
-      'Origin': 'https://sites.motor.com'
+      'Referer': upstream === 'api' ? 'https://api.motor.com/' : 'https://sites.motor.com/m1/',
+      'Origin': upstream === 'api' ? 'https://api.motor.com' : 'https://sites.motor.com'
     };
-    
-    // Add any custom headers from the request (except host, cookie, etc)
-    const skipHeaders = ['host', 'cookie', 'x-session-id', 'content-length', 'connection'];
+
+    const skipHeaders = ['host', 'cookie', 'x-session-id', 'content-length', 'connection', 'x-upstream', 'session'];
     for (const [key, value] of Object.entries(req.headers)) {
-      if (!skipHeaders.includes(key.toLowerCase())) {
-        headers[key] = value;
-      }
+      if (!skipHeaders.includes(key.toLowerCase())) headers[key] = value;
     }
-    
-    console.log(`[MOTOR API] Using credentials:`, {
-      PublicKey: credentials.PublicKey,
-      ApiTokenKey: credentials.ApiTokenKey
-    });
-    
-    // Make the HTTP request
+
     const axiosConfig = {
       method: req.method,
       url: targetUrl,
-      headers: headers,
-      validateStatus: () => true // Accept any status code
+      headers,
+      validateStatus: () => true
     };
-    
-    // Add query parameters if any
-    if (Object.keys(req.query).length > 0) {
-      axiosConfig.params = req.query;
-    }
-    
-    // Add body for non-GET requests
-    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
-      axiosConfig.data = req.body;
-    }
-    
+
+    if (Object.keys(req.query || {}).length > 0) axiosConfig.params = req.query;
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) axiosConfig.data = req.body;
+
     const response = await axios(axiosConfig);
-    
-    console.log(`[MOTOR API] Response status: ${response.status}`);
-    console.log(`[MOTOR API] Content-Type: ${response.headers['content-type']}`);
-    
-    // Check if response is HTML (indicates wrong endpoint or session issue)
+
     const contentType = response.headers['content-type'] || '';
     if (contentType.includes('text/html')) {
-      const htmlPreview = typeof response.data === 'string' 
-        ? response.data.substring(0, 500) 
-        : JSON.stringify(response.data).substring(0, 500);
-      
-      return res.status(400).json({
-        error: 'HTML_RESPONSE',
-        message: 'Motor API returned HTML instead of JSON.',
-        suggestions: [
-          'Use /m1/api/ endpoints for JSON responses',
-          'Example: /m1/api/years',
-          'Example: /m1/api/year/2024/makes',
-          'Example: /m1/api/year/2024/make/ACURA/models'
-        ],
-        htmlPreview: htmlPreview + '...'
-      });
+      const htmlPreview = typeof response.data === 'string' ? response.data.substring(0, 500) : JSON.stringify(response.data).substring(0, 500);
+      return res.status(400).json({ error: 'HTML_RESPONSE', message: 'Motor API returned HTML instead of JSON.', htmlPreview: htmlPreview + '...' });
     }
-    
-    // Forward the response
-    res.status(response.status).json(response.data);
-    
+
+    return res.status(response.status).json(response.data);
+
   } catch (error) {
-    console.error('[MOTOR API] Error:', error.message);
-    res.status(500).json({
-      error: 'Motor API request failed',
-      message: error.message,
-      details: error.response ? {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data
-      } : undefined
-    });
+    console.error('[MOTOR API] Error:', error && error.message ? error.message : error);
+    return res.status(500).json({ error: 'Motor API request failed', message: error && error.message ? error.message : String(error) });
   }
+}
+
+// Route: proxy using query/header session
+app.all('/motor/*', async (req, res) => {
+  const motorPath = req.params[0];
+  return performMotorProxyFirebase(req, res, motorPath, null, null);
+});
+
+// Route: pass session id in URL
+app.all('/motor-session/:sessionId/*', async (req, res) => {
+  const motorPath = req.params[0];
+  const sessionId = req.params.sessionId;
+  return performMotorProxyFirebase(req, res, motorPath, sessionId, null);
 });
 
 // Delete session
 app.delete('/session/:sessionId', async (req, res) => {
   const { sessionId } = req.params;
-  
   try {
     await db.collection('sessions').doc(sessionId).delete();
     console.log(`[SESSION] Deleted: ${sessionId}`);
     return res.json({ success: true, message: 'Session deleted' });
   } catch (error) {
+    console.error('[SESSION] Delete error:', error && error.message ? error.message : error);
     return res.status(500).json({ error: 'Failed to delete session' });
   }
 });
 
 // Export the Express app as a Firebase Function
 exports.api = functions
-  .runWith({
-    timeoutSeconds: 540,
-    memory: '2GB'
-  })
-  .https
-  .onRequest(app);
+  .runWith({ timeoutSeconds: 540, memory: '2GB' })
+  .https.onRequest(app);

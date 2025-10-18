@@ -32,9 +32,22 @@ app.post('/api/auth', async (req, res) => {
     return res.status(400).json({ error: 'cardNumber is required' });
   }
 
+  // correlation id: prefer incoming header (many possible variants), else generate
+  function extractCorrelationId(req) {
+    const hdrs = req.headers || {};
+    const keys = Object.keys(hdrs);
+    for (const k of keys) {
+      const key = k.toLowerCase();
+      if (key === 'x-correlation-id' || key === 'x-correlationid' || key === 'x-correlation' || key === 'xcorrelationid' ) return hdrs[k];
+    }
+    return null;
+  }
+
   let browser;
   try {
-    console.log(`\n[AUTH] Starting authentication for card: ${cardNumber}`);
+    const incomingCorrelation = extractCorrelationId(req);
+    const correlationId = incomingCorrelation || uuidv4();
+    console.log(`\n[AUTH] Starting authentication for card: ${cardNumber} (correlation=${correlationId})`);
     
     // Launch Puppeteer
     browser = await puppeteer.launch({
@@ -130,12 +143,13 @@ app.post('/api/auth', async (req, res) => {
         createdAt: new Date(),
         expiresAt: new Date(motorCookies.ApiTokenExpiration || Date.now() + 24 * 60 * 60 * 1000)
       });
-      
-      console.log(`[AUTH] ✓ Session created: ${sessionId}`);
-      
+      console.log(`[AUTH] ✓ Session created: ${sessionId} (correlation=${correlationId})`);
+      // Echo correlation back and also set the Motor-expected header when making further requests
+      res.setHeader('X-Correlation-Id', correlationId);
       return res.json({
         success: true,
         sessionId,
+        correlationId,
         credentials: {
           PublicKey: motorCookies.PublicKey,
           ApiTokenKey: motorCookies.ApiTokenKey,
@@ -145,8 +159,11 @@ app.post('/api/auth', async (req, res) => {
         }
       });
     } else {
+      const failureCorrelation = correlationId || uuidv4();
+      res.setHeader('X-Correlation-Id', failureCorrelation);
       return res.status(500).json({
         error: 'Authentication timeout',
+        correlationId: failureCorrelation,
         message: 'Failed to reach Motor domain or extract credentials'
       });
     }
@@ -156,67 +173,82 @@ app.post('/api/auth', async (req, res) => {
     if (browser) {
       await browser.close();
     }
+    const failureCorrelation = uuidv4();
+    res.setHeader('X-Correlation-Id', failureCorrelation);
     return res.status(500).json({
       error: 'Authentication failed',
+      correlationId: failureCorrelation,
       message: error.message
     });
   }
 });
 
 // Step 2: Proxy Motor API requests using direct HTTP calls
-app.all('/api/motor/*', async (req, res) => {
+// Helper to perform Motor proxy request (used by multiple routes)
+async function performMotorProxy(req, res, motorPath, explicitSessionId, explicitUpstream) {
   const axios = require('axios');
-  const motorPath = req.params[0];
-  const sessionId = req.headers['x-session-id'];
-  
+  // Determine upstream: explicit param takes precedence, then header/query, default 'sites'
+  const upstream = (explicitUpstream || req.headers['x-upstream'] || req.query.upstream || 'sites').toLowerCase();
+
+  // Determine session id: explicit param takes precedence, then header, then query
+  const sessionId = explicitSessionId || req.headers['x-session-id'] || req.query.session;
   if (!sessionId) {
-    return res.status(401).json({ error: 'x-session-id header is required' });
+    return res.status(401).json({ error: 'x-session-id header or ?session= is required' });
   }
-  
+
   const session = sessions.get(sessionId);
   if (!session) {
     return res.status(401).json({ error: 'Invalid or expired session' });
   }
-  
+
   // Check expiration
   if (session.expiresAt && new Date() > session.expiresAt) {
     sessions.delete(sessionId);
     return res.status(401).json({ error: 'Session expired' });
   }
-  
+
   const credentials = session.credentials;
-  
+
   try {
     console.log(`\n[MOTOR API] ${req.method} /api/motor/${motorPath}`);
     console.log(`[MOTOR API] Session: ${sessionId}`);
-    
-    // Build target URL - direct to Motor API
-    const targetUrl = `https://sites.motor.com/${motorPath}`;
+    console.log(`[MOTOR API] Upstream selected: ${upstream}`);
+
+    // Build target URL - support multiple upstreams
+    let targetUrl;
+    if (upstream === 'api') {
+      // Swagger-style API host (api.motor.com/v1)
+      const cleaned = motorPath.replace(/^\/+/, '');
+      targetUrl = `https://api.motor.com/v1/${cleaned}`;
+    } else {
+      // Default: legacy sites.motor.com (m1 path style)
+      targetUrl = `https://sites.motor.com/${motorPath}`;
+    }
     console.log(`[MOTOR API] Requesting: ${targetUrl}`);
-    
+
     // Prepare headers with Motor API authentication
     const headers = {
       'Accept': 'application/json, text/plain, */*',
       'Content-Type': 'application/json',
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
       'Cookie': credentials._cookieString,
-      'Referer': 'https://sites.motor.com/m1/',
-      'Origin': 'https://sites.motor.com'
+      'Referer': upstream === 'api' ? 'https://api.motor.com/' : 'https://sites.motor.com/m1/',
+      'Origin': upstream === 'api' ? 'https://api.motor.com' : 'https://sites.motor.com'
     };
-    
+
     // Add any custom headers from the request (except host, cookie, etc)
-    const skipHeaders = ['host', 'cookie', 'x-session-id', 'content-length', 'connection'];
+    const skipHeaders = ['host', 'cookie', 'x-session-id', 'content-length', 'connection', 'x-upstream', 'session'];
     for (const [key, value] of Object.entries(req.headers)) {
       if (!skipHeaders.includes(key.toLowerCase())) {
         headers[key] = value;
       }
     }
-    
+
     console.log(`[MOTOR API] Using credentials:`, {
       PublicKey: credentials.PublicKey,
       ApiTokenKey: credentials.ApiTokenKey
     });
-    
+
     // Make the HTTP request
     const axiosConfig = {
       method: req.method,
@@ -224,45 +256,39 @@ app.all('/api/motor/*', async (req, res) => {
       headers: headers,
       validateStatus: () => true // Accept any status code
     };
-    
+
     // Add query parameters if any
     if (Object.keys(req.query).length > 0) {
       axiosConfig.params = req.query;
     }
-    
+
     // Add body for non-GET requests
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
       axiosConfig.data = req.body;
     }
-    
+
     const response = await axios(axiosConfig);
-    
+
     console.log(`[MOTOR API] Response status: ${response.status}`);
     console.log(`[MOTOR API] Content-Type: ${response.headers['content-type']}`);
-    
-    // Check if response is HTML (indicates wrong endpoint or session issue)
+
+    // If the upstream returned HTML, forward it directly so callers can view the page
+    // (useful for endpoints that intentionally return HTML or when diagnosing redirects/login pages)
     const contentType = response.headers['content-type'] || '';
     if (contentType.includes('text/html')) {
-      const htmlPreview = typeof response.data === 'string' 
-        ? response.data.substring(0, 500) 
-        : JSON.stringify(response.data).substring(0, 500);
-      
-      return res.status(400).json({
-        error: 'HTML_RESPONSE',
-        message: 'Motor API returned HTML instead of JSON. This usually means the endpoint is incorrect or the session expired.',
-        suggestions: [
-          'Use /m1/api/ endpoints for JSON responses',
-          'Example: /m1/api/years',
-          'Example: /m1/api/year/2024/makes',
-          'Example: /m1/api/year/2024/make/ACURA/models'
-        ],
-        htmlPreview: htmlPreview + '...'
-      });
+      console.log('[MOTOR API] Forwarding HTML response from upstream');
+      // Preserve upstream status and content-type
+      res.setHeader('Content-Type', response.headers['content-type'] || 'text/html');
+      if (typeof response.data === 'string' || Buffer.isBuffer(response.data)) {
+        return res.status(response.status).send(response.data);
+      }
+      // Fallback: stringify non-string bodies
+      return res.status(response.status).send(String(response.data));
     }
-    
+
     // Forward the response
     res.status(response.status).json(response.data);
-    
+
   } catch (error) {
     console.error('[MOTOR API] Error:', error.message);
     res.status(500).json({
@@ -275,6 +301,19 @@ app.all('/api/motor/*', async (req, res) => {
       } : undefined
     });
   }
+}
+
+// Route: support query param ?session= on existing path
+app.all('/api/motor/*', async (req, res) => {
+  const motorPath = req.params[0];
+  return performMotorProxy(req, res, motorPath, null, null);
+});
+
+// Shortcut route: pass session id in URL path
+app.all('/api/motor-session/:sessionId/*', async (req, res) => {
+  const motorPath = req.params[0];
+  const sessionId = req.params.sessionId;
+  return performMotorProxy(req, res, motorPath, sessionId, null);
 });
 
 // Delete session

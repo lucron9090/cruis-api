@@ -1,3 +1,145 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Motor API Proxy — Minimal Tester</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Arial; padding: 20px; background:#f4f6f8 }
+      .box { background:white; padding:16px; border-radius:8px; max-width:900px; margin:12px auto }
+      input, select, textarea { width:100%; padding:8px; margin:6px 0; box-sizing:border-box }
+      button { padding:8px 12px; margin-right:8px }
+      pre { background:#0b1020;color:#cfe;font-size:13px;padding:12px;border-radius:6px; overflow:auto }
+      .row{display:flex;gap:8px}
+      .muted{color:#666;font-size:13px}
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h2>Motor API Proxy — Minimal Tester</h2>
+      <p class="muted">Authenticate, call Motor endpoints, view correlation id and response. This is a lightweight replacement for the previous UI.</p>
+
+      <h3>1) Authenticate</h3>
+      <div>
+        <label>Library card number</label>
+        <input id="cardNumber" value="1001600244772" />
+        <div class="row">
+          <button id="authBtn">Authenticate</button>
+          <button id="clearBtn">Clear Session</button>
+        </div>
+        <div id="authResult" style="margin-top:8px"></div>
+      </div>
+
+      <h3>2) Call Motor API</h3>
+      <div>
+        <label>Upstream</label>
+        <select id="upstream"><option value="sites">sites.motor.com (m1)</option><option value="api">api.motor.com (v1)</option></select>
+
+        <label>HTTP Method</label>
+        <select id="method"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select>
+
+        <label>Endpoint path (appended to /api/motor/)</label>
+        <input id="path" placeholder="m1/api/years" value="m1/api/years" />
+
+        <label>Request body (JSON, optional)</label>
+        <textarea id="body" rows="6" placeholder='{"foo": "bar"}'></textarea>
+
+        <div class="row" style="margin-top:8px">
+          <button id="callBtn">Send Request</button>
+          <button id="callUrlBtn">Send using URL-session</button>
+          <button id="healthBtn">Server Health</button>
+        </div>
+
+        <div style="margin-top:12px">
+          <strong>Last Response (headers + body)</strong>
+          <pre id="lastResp">(no response yet)</pre>
+        </div>
+      </div>
+
+      <h3>3) Session</h3>
+      <div>
+        <p class="muted">Stored sessionId (copied to clipboard on success):</p>
+        <input id="sessionId" readonly />
+        <div style="margin-top:8px">
+          <button id="delBtn">Delete session on server</button>
+          <button id="copyBtn">Copy session id</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const authBtn = document.getElementById('authBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const callBtn = document.getElementById('callBtn');
+      const callUrlBtn = document.getElementById('callUrlBtn');
+      const healthBtn = document.getElementById('healthBtn');
+      const delBtn = document.getElementById('delBtn');
+      const copyBtn = document.getElementById('copyBtn');
+
+      const sessionEl = document.getElementById('sessionId');
+      const authResult = document.getElementById('authResult');
+      const lastResp = document.getElementById('lastResp');
+
+      function setSession(id){ sessionEl.value = id || ''; if(id) localStorage.setItem('motorSessionId', id); else localStorage.removeItem('motorSessionId') }
+      setSession(localStorage.getItem('motorSessionId'));
+
+      authBtn.onclick = async ()=>{
+        authResult.textContent = 'authenticating...';
+        const cardNumber = document.getElementById('cardNumber').value;
+        try{
+          const res = await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cardNumber})});
+          const headers = {};
+          for(const [k,v] of res.headers) headers[k]=v;
+          const body = await res.json().catch(()=>null);
+          authResult.textContent = JSON.stringify({ status: res.status, headers, body }, null, 2);
+          if(res.ok && body && body.sessionId){ setSession(body.sessionId); navigator.clipboard.writeText(body.sessionId).catch(()=>{}); }
+        }catch(e){ authResult.textContent = 'Error: '+e.message }
+      };
+
+      clearBtn.onclick = ()=>{ setSession(null); lastResp.textContent=''; authResult.textContent='Session cleared' };
+
+      async function sendRequest(useUrl=false){
+        const upstream = document.getElementById('upstream').value;
+        const method = document.getElementById('method').value;
+        const path = document.getElementById('path').value.replace(/^\/+/, '');
+        const body = document.getElementById('body').value;
+        const sessionId = sessionEl.value;
+        const urlBase = '/api/motor/';
+
+        let url = urlBase + path;
+        const opts = { method, headers: { 'X-Upstream': upstream } };
+        if(!useUrl){ opts.headers['X-Session-Id'] = sessionId }
+        else { url = '/api/motor-session/' + encodeURIComponent(sessionId) + '/' + path }
+
+        if(['POST','PUT'].includes(method) && body) opts.body = body;
+
+        try{
+          const resp = await fetch(url, opts);
+          const headers = {};
+          for(const [k,v] of resp.headers) headers[k]=v;
+          let respBody;
+          const ct = resp.headers.get('content-type') || '';
+          if(ct.includes('application/json')) respBody = await resp.json(); else respBody = await resp.text();
+          lastResp.textContent = JSON.stringify({ status: resp.status, headers, body: respBody }, null, 2);
+        }catch(e){ lastResp.textContent = 'Error: '+e.message }
+      }
+
+      callBtn.onclick = ()=> sendRequest(false);
+      callUrlBtn.onclick = ()=> sendRequest(true);
+
+      healthBtn.onclick = async ()=>{
+        try{ const r=await fetch('/health'); const j=await r.json(); lastResp.textContent = JSON.stringify({status:r.status, body:j},null,2) }catch(e){ lastResp.textContent='Error: '+e.message }
+      };
+
+      delBtn.onclick = async ()=>{
+        const id = sessionEl.value; if(!id) return alert('no session');
+        try{ const r = await fetch('/api/session/'+encodeURIComponent(id),{method:'DELETE'}); const j = await r.json(); lastResp.textContent = JSON.stringify({status:r.status, body:j},null,2); if(r.ok) setSession(null) }catch(e){ lastResp.textContent='Error: '+e.message }
+      };
+
+      copyBtn.onclick = ()=>{ if(sessionEl.value) navigator.clipboard.writeText(sessionEl.value).then(()=>alert('copied')) };
+    </script>
+  </body>
+</html>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -321,6 +463,14 @@
                 <span class="status-label">Active Sessions:</span>
                 <span id="activeSessions" class="status-value status-info">-</span>
             </div>
+            <div class="status-item">
+                <span class="status-label">Upstream</span>
+                <select id="upstreamSelect" onchange="changeUpstream()">
+                    <option value="sites">sites.motor.com (m1)</option>
+                    <option value="api">api.motor.com (v1)</option>
+                </select>
+            </div>
+            <div style="width:100%; padding-top:8px; font-size:12px; color:#666;">Tip: Select <strong>sites</strong> for legacy site-style endpoints (e.g. <code>m1/api/years</code>), or <strong>api</strong> to call the Swagger-based API paths (e.g. <code>Information/YMME/Years</code>). Auth flow is server-side; API compatibility may vary.</div>
         </div>
 
         <!-- Main Grid -->
@@ -418,6 +568,7 @@
         // State
         let sessionId = localStorage.getItem('motorSessionId') || null;
         let sessionExpiry = localStorage.getItem('motorSessionExpiry') || null;
+    let upstream = localStorage.getItem('motorUpstream') || 'sites';
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -425,6 +576,7 @@
             if (sessionId) {
                 updateSessionStatus();
             }
+            document.getElementById('upstreamSelect').value = upstream;
             
             // Show/hide request body based on method
             document.getElementById('method').addEventListener('change', (e) => {
@@ -540,7 +692,8 @@
                     method: method,
                     headers: {
                         'X-Session-Id': sessionId,
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-Upstream': upstream
                     }
                 };
                 
@@ -617,6 +770,13 @@
             } catch (error) {
                 showSessionInfo('Error: ' + error.message);
             }
+        }
+
+        function changeUpstream() {
+            const sel = document.getElementById('upstreamSelect');
+            upstream = sel.value;
+            localStorage.setItem('motorUpstream', upstream);
+            showSessionInfo('Upstream switched to: ' + upstream);
         }
 
         function copySessionId() {

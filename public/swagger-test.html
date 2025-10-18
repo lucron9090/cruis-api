@@ -461,6 +461,16 @@
                 <div class="status-label">Active Sessions</div>
                 <div class="status-value" id="activeSessions">0</div>
             </div>
+            <div class="status-item">
+                <div class="status-label">Upstream</div>
+                <div class="status-value">
+                    <select id="upstreamSelect" onchange="changeUpstream()">
+                        <option value="sites">sites.motor.com (m1)</option>
+                        <option value="api">api.motor.com (v1)</option>
+                    </select>
+                </div>
+            </div>
+            <div style="width:100%; padding-top:8px; font-size:12px; color:#666;">Use <strong>sites</strong> for legacy m1 (site-style) paths like <code>m1/api/years</code>. Use <strong>api</strong> to call Swagger/API endpoints like <code>Information/YMME/Years</code>. Authentication is still performed via the server-side EBSCO flow and may yield cookies suitable for the <em>sites</em> upstream; API token compatibility depends on upstream requirements.</div>
         </div>
 
         <!-- Main Content -->
@@ -500,6 +510,7 @@
         let sessionId = localStorage.getItem('motorSessionId') || null;
         let swaggerData = null;
         let currentEndpoint = null;
+    let upstream = localStorage.getItem('motorUpstream') || 'sites';
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
@@ -507,6 +518,7 @@
             renderEndpointsList();
             checkHealth();
             updateSessionStatus();
+            document.getElementById('upstreamSelect').value = upstream;
         });
 
         // Load Swagger JSON
@@ -723,10 +735,10 @@
         // Quick fill examples for Motor API
         function quickFillExample(type) {
             const examples = {
-                years: { endpoint: 'm1/api/years' },
-                makes: { endpoint: 'm1/api/year/2024/makes' },
-                models: { endpoint: 'm1/api/year/2024/make/Cadillac/models' },
-                vehicle: { endpoint: 'm1/api/source/GeneralMotors/100347105/motorvehicles' }
+                years: { endpointSites: 'm1/api/years', endpointApi: 'Information/YMME/Years' },
+                makes: { endpointSites: 'm1/api/year/2024/makes', endpointApi: 'Information/YMME/Years/2024/Makes' },
+                models: { endpointSites: 'm1/api/year/2024/make/Cadillac/models', endpointApi: 'Information/YMME/Years/2024/Makes/{MakeID}/Models' },
+                vehicle: { endpointSites: 'm1/api/source/GeneralMotors/100347105/motorvehicles', endpointApi: 'Information/Vehicles/Details/ByVIN' }
             };
 
             const example = examples[type];
@@ -751,6 +763,27 @@
                 document.querySelectorAll('input[id*="param"]').forEach((input, i) => {
                     if (i === 0) input.value = 'm1/api/source/GeneralMotors/100347105/motorvehicles';
                 });
+            }
+
+            // If API upstream selected, fill with API-style endpoints
+            if (upstream === 'api') {
+                if (type === 'years') {
+                    document.querySelectorAll('input[id*="param"]').forEach((input, i) => {
+                        if (i === 0) input.value = 'Information/YMME/Years';
+                    });
+                } else if (type === 'makes') {
+                    document.querySelectorAll('input[id*="param"]').forEach((input, i) => {
+                        if (i === 0) input.value = 'Information/YMME/Years/2024/Makes';
+                    });
+                } else if (type === 'models') {
+                    document.querySelectorAll('input[id*="param"]').forEach((input, i) => {
+                        if (i === 0) input.value = 'Information/YMME/Years/2024/Makes/{MakeID}/Models';
+                    });
+                } else if (type === 'vehicle') {
+                    document.querySelectorAll('input[id*="param"]').forEach((input, i) => {
+                        if (i === 0) input.value = 'Information/Vehicles/Details/ByVIN';
+                    });
+                }
             }
 
             showAlert('Example loaded! Click "Send Request" to test.', 'info');
@@ -782,7 +815,9 @@
                 if (url.includes('/motor/')) {
                     const endpointInput = document.querySelector('[id*="param"]');
                     if (endpointInput) {
-                        url = `/api/motor/${endpointInput.value}`;
+                        // If API upstream, pass the API path but still call our /api/motor/ proxy
+                        const epVal = endpointInput.value.replace(/^\/+/, '');
+                        url = `/api/motor/${epVal}`;
                     }
                 }
 
@@ -791,6 +826,8 @@
                     'Content-Type': 'application/json'
                 };
 
+                // Add upstream header for server-side routing
+                headers['X-Upstream'] = upstream;
                 // Add session ID if available and required
                 if (sessionId && url.includes('/motor')) {
                     headers['X-Session-Id'] = sessionId;
@@ -895,6 +932,13 @@
         // Clear alert
         function clearAlert() {
             document.getElementById('alertContainer').innerHTML = '';
+        }
+
+        function changeUpstream() {
+            const sel = document.getElementById('upstreamSelect');
+            upstream = sel.value;
+            localStorage.setItem('motorUpstream', upstream);
+            showAlert(`Upstream switched to: ${upstream}`, 'info');
         }
 
         // Check health
