@@ -106,9 +106,8 @@ app.post('/auth', async (req, res) => {
 });
 
 // Helper: perform motor proxy using Firestore session
-async function performMotorProxyFirebase(req, res, motorPath, explicitSessionId, explicitUpstream) {
+async function performMotorProxyFirebase(req, res, motorPath, explicitSessionId) {
   try {
-    const upstream = (explicitUpstream || req.headers['x-upstream'] || req.query.upstream || 'sites').toLowerCase();
     const sessionId = explicitSessionId || req.headers['x-session-id'] || req.query.session;
     if (!sessionId) return res.status(401).json({ error: 'x-session-id header or ?session= is required' });
 
@@ -127,26 +126,20 @@ async function performMotorProxyFirebase(req, res, motorPath, explicitSessionId,
 
     console.log(`[MOTOR API] ${req.method} /motor/${motorPath}`);
     console.log(`[MOTOR API] Session: ${sessionId}`);
-    console.log(`[MOTOR API] Upstream selected: ${upstream}`);
 
-    let targetUrl;
-    if (upstream === 'api') {
-      const cleaned = motorPath.replace(/^\/+/, '');
-      targetUrl = `https://api.motor.com/v1/${cleaned}`;
-    } else {
-      targetUrl = `https://sites.motor.com/${motorPath}`;
-    }
+    // Always use sites.motor.com with m1 paths
+    const targetUrl = `https://sites.motor.com/${motorPath}`;
 
     const headers = {
       'Accept': 'application/json, text/plain, */*',
       'Content-Type': 'application/json',
       'User-Agent': 'Mozilla/5.0',
       'Cookie': credentials._cookieString,
-      'Referer': upstream === 'api' ? 'https://api.motor.com/' : 'https://sites.motor.com/m1/',
-      'Origin': upstream === 'api' ? 'https://api.motor.com' : 'https://sites.motor.com'
+      'Referer': 'https://sites.motor.com/m1/',
+      'Origin': 'https://sites.motor.com'
     };
 
-    const skipHeaders = ['host', 'cookie', 'x-session-id', 'content-length', 'connection', 'x-upstream', 'session'];
+    const skipHeaders = ['host', 'cookie', 'x-session-id', 'content-length', 'connection', 'session'];
     for (const [key, value] of Object.entries(req.headers)) {
       if (!skipHeaders.includes(key.toLowerCase())) headers[key] = value;
     }
@@ -165,8 +158,12 @@ async function performMotorProxyFirebase(req, res, motorPath, explicitSessionId,
 
     const contentType = response.headers['content-type'] || '';
     if (contentType.includes('text/html')) {
-      const htmlPreview = typeof response.data === 'string' ? response.data.substring(0, 500) : JSON.stringify(response.data).substring(0, 500);
-      return res.status(400).json({ error: 'HTML_RESPONSE', message: 'Motor API returned HTML instead of JSON.', htmlPreview: htmlPreview + '...' });
+      console.log('[MOTOR API] Forwarding HTML response from upstream');
+      res.setHeader('Content-Type', response.headers['content-type'] || 'text/html');
+      if (typeof response.data === 'string' || Buffer.isBuffer(response.data)) {
+        return res.status(response.status).send(response.data);
+      }
+      return res.status(response.status).send(String(response.data));
     }
 
     return res.status(response.status).json(response.data);
@@ -180,14 +177,14 @@ async function performMotorProxyFirebase(req, res, motorPath, explicitSessionId,
 // Route: proxy using query/header session
 app.all('/motor/*', async (req, res) => {
   const motorPath = req.params[0];
-  return performMotorProxyFirebase(req, res, motorPath, null, null);
+  return performMotorProxyFirebase(req, res, motorPath, null);
 });
 
 // Route: pass session id in URL
 app.all('/motor-session/:sessionId/*', async (req, res) => {
   const motorPath = req.params[0];
   const sessionId = req.params.sessionId;
-  return performMotorProxyFirebase(req, res, motorPath, sessionId, null);
+  return performMotorProxyFirebase(req, res, motorPath, sessionId);
 });
 
 // Delete session

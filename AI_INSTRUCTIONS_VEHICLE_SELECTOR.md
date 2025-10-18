@@ -10,6 +10,56 @@ Create a small, secure, and fast backend service (Firebase Functions) that provi
 
 The backend should obtain vehicle data from Motor (via the existing proxy / session system in this repo) and return minimal JSON shapes the frontend expects.
 
+## Authentication & Session Management
+
+This API proxy uses a two-stage authentication architecture:
+
+1. **EBSCO OAuth (Puppeteer)** — obtain Motor credentials
+   - Endpoint: `POST /api/auth`
+   - Request body: `{ "cardNumber": "1001600244772" }`
+   - Response: `{ "success": true, "sessionId": "uuid", "correlationId": "uuid", "credentials": {...} }`
+   - Process: The server uses Puppeteer to automate EBSCO login, extract Motor cookies (`AuthUserInfo`), and store them server-side.
+   - Session lifetime: credentials expire based on `ApiTokenExpiration` returned from Motor.
+
+2. **Motor API Proxy (Direct HTTP)** — all subsequent calls use the session
+   - The vehicle selector endpoints should accept a session ID (from the auth step) via:
+     - Header: `X-Session-Id: <sessionId>`
+     - Query param: `?session=<sessionId>`
+   - Forward the session ID to the local proxy endpoints (e.g., `/api/motor/m1/api/years`)
+   - The proxy will attach the stored Motor cookies and credentials to upstream requests.
+
+Example auth flow:
+```bash
+# Step 1: Authenticate and get a session
+curl -X POST http://localhost:3001/api/auth \
+  -H 'Content-Type: application/json' \
+  -d '{"cardNumber":"1001600244772"}'
+
+# Response:
+# {
+#   "success": true,
+#   "sessionId": "abc-123-uuid",
+#   "correlationId": "xyz-456-uuid",
+#   "credentials": {
+#     "PublicKey": "...",
+#     "ApiTokenKey": "...",
+#     "ApiTokenExpiration": "2025-10-18T11:42:46Z",
+#     ...
+#   }
+# }
+
+# Step 2: Use the sessionId to call vehicle endpoints
+curl http://localhost:3001/vehicle/years \
+  -H 'X-Session-Id: abc-123-uuid'
+```
+
+Frontend apps should:
+- Perform the auth call once (or when session expires).
+- Store the `sessionId` (e.g., in memory or localStorage).
+- Include the `sessionId` in every vehicle API request (as a header or query param).
+
+Your vehicle selector backend functions should accept and forward this session ID to the underlying Motor proxy.
+
 Requirements / contract
 
 - Inputs
@@ -27,10 +77,11 @@ Requirements / contract
   - Error: appropriate 4xx/5xx with { error: string, message?: string }
 
 - Behavior
-  - Use the existing Motor endpoints exposed by the proxy in this repo (examples):
+  - Use the existing Motor M1 endpoints exposed by the proxy in this repo (examples):
     - Years: GET /api/motor/m1/api/years
     - Makes: GET /api/motor/m1/api/year/{year}/makes
     - Models: GET /api/motor/m1/api/year/{year}/make/{make}/models
+  - All requests are proxied to `https://sites.motor.com` (Motor M1 API)
   - Forward correlation id if present (accept X-Correlation-Id and forward it to upstream)
   - Minimal caching is acceptable (in-memory cache with short TTL) to reduce repeated Motor calls
   - Normalize Motor response to the simplified { items: [...] } shape

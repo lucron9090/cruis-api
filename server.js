@@ -183,13 +183,9 @@ app.post('/api/auth', async (req, res) => {
   }
 });
 
-// Step 2: Proxy Motor API requests using direct HTTP calls
+// Step 2: Proxy Motor M1 API requests using direct HTTP calls
 // Helper to perform Motor proxy request (used by multiple routes)
-async function performMotorProxy(req, res, motorPath, explicitSessionId, explicitUpstream) {
-  const axios = require('axios');
-  // Determine upstream: explicit param takes precedence, then header/query, default 'sites'
-  const upstream = (explicitUpstream || req.headers['x-upstream'] || req.query.upstream || 'sites').toLowerCase();
-
+async function performMotorProxy(req, res, motorPath, explicitSessionId) {
   // Determine session id: explicit param takes precedence, then header, then query
   const sessionId = explicitSessionId || req.headers['x-session-id'] || req.query.session;
   if (!sessionId) {
@@ -212,18 +208,9 @@ async function performMotorProxy(req, res, motorPath, explicitSessionId, explici
   try {
     console.log(`\n[MOTOR API] ${req.method} /api/motor/${motorPath}`);
     console.log(`[MOTOR API] Session: ${sessionId}`);
-    console.log(`[MOTOR API] Upstream selected: ${upstream}`);
 
-    // Build target URL - support multiple upstreams
-    let targetUrl;
-    if (upstream === 'api') {
-      // Swagger-style API host (api.motor.com/v1)
-      const cleaned = motorPath.replace(/^\/+/, '');
-      targetUrl = `https://api.motor.com/v1/${cleaned}`;
-    } else {
-      // Default: legacy sites.motor.com (m1 path style)
-      targetUrl = `https://sites.motor.com/${motorPath}`;
-    }
+    // Build target URL - always use sites.motor.com with m1 paths
+    const targetUrl = `https://sites.motor.com/${motorPath}`;
     console.log(`[MOTOR API] Requesting: ${targetUrl}`);
 
     // Prepare headers with Motor API authentication
@@ -232,12 +219,12 @@ async function performMotorProxy(req, res, motorPath, explicitSessionId, explici
       'Content-Type': 'application/json',
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
       'Cookie': credentials._cookieString,
-      'Referer': upstream === 'api' ? 'https://api.motor.com/' : 'https://sites.motor.com/m1/',
-      'Origin': upstream === 'api' ? 'https://api.motor.com' : 'https://sites.motor.com'
+      'Referer': 'https://sites.motor.com/m1/',
+      'Origin': 'https://sites.motor.com'
     };
 
     // Add any custom headers from the request (except host, cookie, etc)
-    const skipHeaders = ['host', 'cookie', 'x-session-id', 'content-length', 'connection', 'x-upstream', 'session'];
+    const skipHeaders = ['host', 'cookie', 'x-session-id', 'content-length', 'connection', 'session'];
     for (const [key, value] of Object.entries(req.headers)) {
       if (!skipHeaders.includes(key.toLowerCase())) {
         headers[key] = value;
@@ -306,14 +293,14 @@ async function performMotorProxy(req, res, motorPath, explicitSessionId, explici
 // Route: support query param ?session= on existing path
 app.all('/api/motor/*', async (req, res) => {
   const motorPath = req.params[0];
-  return performMotorProxy(req, res, motorPath, null, null);
+  return performMotorProxy(req, res, motorPath, null);
 });
 
 // Shortcut route: pass session id in URL path
 app.all('/api/motor-session/:sessionId/*', async (req, res) => {
   const motorPath = req.params[0];
   const sessionId = req.params.sessionId;
-  return performMotorProxy(req, res, motorPath, sessionId, null);
+  return performMotorProxy(req, res, motorPath, sessionId);
 });
 
 // Delete session
@@ -351,6 +338,6 @@ app.listen(PORT, () => {
   console.log(`\n  2. Call Motor API (direct HTTP with session):`);
   console.log(`     curl http://localhost:${PORT}/api/motor/m1/api/years \\`);
   console.log(`       -H 'X-Session-Id: YOUR_SESSION_ID'`);
-  console.log(`\nWeb Interface: http://localhost:${PORT}/swagger-test.html`);
+  console.log(`\nWeb Interface: http://localhost:${PORT}/test.html`);
   console.log(`${'='.repeat(60)}\n`);
 });
