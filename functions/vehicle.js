@@ -44,7 +44,7 @@ module.exports = {
       if (cached) return res.json(cached);
 
       const headers = buildForwardHeaders(req);
-      const url = `${process.env.PROXY_BASE || ''}/api/motor/m1/api/years`;
+      const url = `${process.env.PROXY_BASE || 'http://localhost:3001'}/api/motor/m1/api/years`;
       const r = await proxyGet(url, headers);
 
       if (String(r.headers['content-type'] || '').includes('text/html')) {
@@ -75,7 +75,7 @@ module.exports = {
       if (cached) return res.json(cached);
 
       const headers = buildForwardHeaders(req);
-      const url = `${process.env.PROXY_BASE || ''}/api/motor/m1/api/year/${encodeURIComponent(year)}/makes`;
+      const url = `${process.env.PROXY_BASE || 'http://localhost:3001'}/api/motor/m1/api/year/${encodeURIComponent(year)}/makes`;
       const r = await proxyGet(url, headers);
 
       if (String(r.headers['content-type'] || '').includes('text/html')) {
@@ -107,7 +107,7 @@ module.exports = {
       if (cached) return res.json(cached);
 
       const headers = buildForwardHeaders(req);
-      const url = `${process.env.PROXY_BASE || ''}/api/motor/m1/api/year/${encodeURIComponent(year)}/make/${encodeURIComponent(make)}/models`;
+      const url = `${process.env.PROXY_BASE || 'http://localhost:3001'}/api/motor/m1/api/year/${encodeURIComponent(year)}/make/${encodeURIComponent(make)}/models`;
       const r = await proxyGet(url, headers);
 
       if (String(r.headers['content-type'] || '').includes('text/html')) {

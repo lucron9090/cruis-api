@@ -161,7 +161,7 @@ Authenticates with EBSCO using library card and returns Motor API credentials.
 
 ### ALL /api/motor/*
 
-Proxy endpoint for Motor API requests. Forwards to `https://sites.motor.com/m1/api/*`
+Proxy endpoint for Motor M1 API requests. Forwards to `https://sites.motor.com/m1/api/*`
 
 **Authentication:** One of the following:
 - Header: `X-Session-Id: your-session-id`
@@ -172,22 +172,46 @@ Proxy endpoint for Motor API requests. Forwards to `https://sites.motor.com/m1/a
 
 Get vehicle years:
 ```bash
-curl http://localhost:3001/api/motor/year/2024/makes \
+curl http://localhost:3001/api/motor/m1/api/years \
   -H "X-Session-Id: session-id"
 ```
 
 Get vehicle makes for 2024:
 ```bash
-curl "http://localhost:3001/api/motor/year/2024/makes?PublicKey=xxx&ApiTokenKey=yyy&ApiTokenValue=zzz"
+curl http://localhost:3001/api/motor/m1/api/year/2024/makes \
+  -H "X-Session-Id: session-id"
 ```
 
-Search technical service bulletins:
+### ALL /api/motorv1/*
+
+Proxy endpoint for Motor V1 API requests. Forwards to `https://api.motor.com/v1/*`
+
+**Authentication:** Same as M1 API (uses same EBSCO authentication):
+- Header: `X-Session-Id: your-session-id`
+- Headers: `X-Public-Key`, `X-Api-Token-Key`, `X-Api-Token-Value`
+- Query params: `PublicKey`, `ApiTokenKey`, `ApiTokenValue`
+
+**Examples:**
+
+Test connection:
 ```bash
-curl http://localhost:3001/api/motor/Information/TSB/Search \
-  -H "X-Session-Id: session-id" \
-  -H "Content-Type: application/json" \
-  -d '{"year": 2024, "make": "Toyota"}'
+curl http://localhost:3001/api/motorv1/HelloWorld \
+  -H "X-Session-Id: session-id"
 ```
+
+Get Chek-Chart vehicle years:
+```bash
+curl http://localhost:3001/api/motorv1/Information/Chek-Chart/Years \
+  -H "X-Session-Id: session-id"
+```
+
+Get makes for 2024:
+```bash
+curl http://localhost:3001/api/motorv1/Information/Chek-Chart/Year/2024/Makes \
+  -H "X-Session-Id: session-id"
+```
+
+**Note:** The V1 and M1 APIs use the same authentication session but have different endpoint structures. See `/public/swagger-v1.json` for complete V1 API documentation.
 
 ### POST /api/motor/token
 

@@ -7,10 +7,14 @@
     body{font-family:Arial,Helvetica,sans-serif;margin:12px}
     select{margin:6px 0;padding:6px;width:240px}
     .row{margin-bottom:8px}
+    .status{padding:8px;margin:8px 0;border-radius:4px;font-size:13px}
+    .status.info{background:#e7f3ff;border-left:4px solid #2196F3;color:#1976D2}
+    .status.error{background:#fee;border-left:4px solid #e74c3c;color:#c0392b}
   </style>
 </head>
 <body>
   <h3>Vehicle Selector</h3>
+  <div id="status" class="status info" style="display:none"></div>
   <div class="row">
     <label for="years">Year</label><br>
     <select id="years"><option>Loading...</option></select>
@@ -28,16 +32,45 @@
     const yearsEl = document.getElementById('years');
     const makesEl = document.getElementById('makes');
     const modelsEl = document.getElementById('models');
+    const statusEl = document.getElementById('status');
+
+    function showStatus(msg, type = 'info') {
+      statusEl.textContent = msg;
+      statusEl.className = 'status ' + type;
+      statusEl.style.display = 'block';
+    }
+
+    // Get session from localStorage (shared with test.html)
+    let sessionId = localStorage.getItem('motorSessionId');
+    
+    if (!sessionId) {
+      showStatus('⚠️ No session found. Redirecting to authentication...', 'error');
+      setTimeout(() => window.location.href = '/test.html', 2000);
+      throw new Error('No session');
+    } else {
+      const shortId = sessionId.substring(0, 8) + '...';
+      showStatus('✓ Using session: ' + shortId, 'info');
+    }
 
     async function fetchJson(url) {
-      const r = await fetch(url, { credentials: 'same-origin' });
-      if (!r.ok) throw new Error('Fetch error ' + r.status);
+      // Add session to URL as query param
+      const separator = url.includes('?') ? '&' : '?';
+      const urlWithSession = url + separator + 'session=' + encodeURIComponent(sessionId);
+      const r = await fetch(urlWithSession, { credentials: 'same-origin' });
+      if (!r.ok) {
+        if (r.status === 401) {
+          showStatus('⚠️ Session expired. Redirecting to re-authenticate...', 'error');
+          localStorage.removeItem('motorSessionId');
+          setTimeout(() => window.location.href = '/test.html', 2000);
+        }
+        throw new Error('Fetch error ' + r.status);
+      }
       return r.json();
     }
 
     function populate(selectEl, items, placeholder) {
       selectEl.innerHTML = '';
-      if (!items || items.length === 0) {
+      if (!Array.isArray(items) || items.length === 0) {
         selectEl.disabled = true;
         const o = document.createElement('option'); o.textContent = placeholder || 'No items'; selectEl.appendChild(o);
         return;
@@ -45,15 +78,23 @@
       selectEl.disabled = false;
       const dflt = document.createElement('option'); dflt.textContent = '— select —'; dflt.value = ''; selectEl.appendChild(dflt);
       for (const it of items) {
-        const o = document.createElement('option'); o.value = it.id; o.textContent = it.name; selectEl.appendChild(o);
+        const o = document.createElement('option');
+        // Motor API returns simple strings for years/makes/models
+        if (typeof it === 'string' || typeof it === 'number') {
+          o.value = String(it); o.textContent = String(it);
+        } else {
+          o.value = it.id || it.name || String(it);
+          o.textContent = it.name || it.id || String(it);
+        }
+        selectEl.appendChild(o);
       }
     }
 
     async function loadYears() {
       try {
         populate(yearsEl, [], 'Loading...');
-        const data = await fetchJson(base + '/functions/vehicle/years');
-        populate(yearsEl, data.items || [], 'No years');
+        const data = await fetchJson('/api/motor/m1/api/years');
+        populate(yearsEl, data || [], 'No years');
       } catch (e) {
         populate(yearsEl, [], 'Error loading');
         console.error(e);
@@ -66,8 +107,8 @@
       populate(makesEl, [], 'Loading...');
       populate(modelsEl, [], 'Select make first');
       try {
-        const data = await fetchJson(base + `/functions/vehicle/makes?year=${encodeURIComponent(year)}`);
-        populate(makesEl, data.items || [], 'No makes');
+        const data = await fetchJson(`/api/motor/m1/api/year/${encodeURIComponent(year)}/makes`);
+        populate(makesEl, data || [], 'No makes');
       } catch (e) {
         populate(makesEl, [], 'Error');
         console.error(e);
@@ -79,8 +120,8 @@
       if (!make) return populate(modelsEl, [], 'Select make first');
       populate(modelsEl, [], 'Loading...');
       try {
-        const data = await fetchJson(base + `/functions/vehicle/models?year=${encodeURIComponent(year)}&make=${encodeURIComponent(make)}`);
-        populate(modelsEl, data.items || [], 'No models');
+        const data = await fetchJson(`/api/motor/m1/api/year/${encodeURIComponent(year)}/make/${encodeURIComponent(make)}/models`);
+        populate(modelsEl, data || [], 'No models');
       } catch (e) {
         populate(modelsEl, [], 'Error');
         console.error(e);

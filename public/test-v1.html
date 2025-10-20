@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Motor V1 API Proxy — Tester</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Arial; padding: 20px; background:#f4f6f8 }
+      .box { background:white; padding:16px; border-radius:8px; max-width:900px; margin:12px auto }
+      input, select, textarea { width:100%; padding:8px; margin:6px 0; box-sizing:border-box }
+      button { padding:8px 12px; margin-right:8px }
+      pre { background:#0b1020;color:#cfe;font-size:13px;padding:12px;border-radius:6px; overflow:auto }
+      .row{display:flex;gap:8px}
+      .muted{color:#666;font-size:13px}
+      .examples{margin-top:12px}
+      .example-btn{font-size:12px;padding:4px 8px;margin:2px}
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h2>Motor V1 API Proxy — Minimal Tester</h2>
+      <p class="muted">Authenticate with EBSCO, call Motor V1 endpoints (api.motor.com/v1), view correlation id and responses.</p>
+      <p class="muted"><a href="/test.html">← Switch to M1 API Tester</a></p>
+
+      <h3>1) Authenticate</h3>
+      <div>
+        <label>Library card number</label>
+        <input id="cardNumber" value="1001600244772" />
+        <div class="row">
+          <button id="authBtn">Authenticate</button>
+          <button id="clearBtn">Clear Session</button>
+        </div>
+        <div id="authResult" style="margin-top:8px"></div>
+      </div>
+
+      <h3>2) Call Motor V1 API</h3>
+      <div>
+        <label>HTTP Method</label>
+        <select id="method"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select>
+
+        <label>Endpoint path (appended to /api/motorv1/)</label>
+        <input id="path" placeholder="HelloWorld" value="HelloWorld" />
+
+        <div class="examples">
+          <strong>Example endpoints:</strong><br>
+          <button class="example-btn" onclick="setPath('HelloWorld')">HelloWorld</button>
+          <button class="example-btn" onclick="setPath('Information/Chek-Chart/Years')">Chek-Chart Years</button>
+          <button class="example-btn" onclick="setPath('Information/Chek-Chart/Year/2024/Makes')">Makes for 2024</button>
+        </div>
+
+        <label>Request body (JSON, optional)</label>
+        <textarea id="body" rows="6" placeholder='{"foo": "bar"}'></textarea>
+
+        <div class="row" style="margin-top:8px">
+          <button id="callBtn">Send Request</button>
+          <button id="callUrlBtn">Send using URL-session</button>
+          <button id="healthBtn">Server Health</button>
+        </div>
+
+        <div style="margin-top:12px">
+          <strong>Last Response (headers + body)</strong>
+          <pre id="lastResp">(no response yet)</pre>
+        </div>
+      </div>
+
+      <h3>3) Session</h3>
+      <div>
+        <p class="muted">Stored sessionId (shared with M1 API tester, copied to clipboard on success):</p>
+        <input id="sessionId" readonly />
+        <div style="margin-top:8px">
+          <button id="delBtn">Delete session on server</button>
+          <button id="copyBtn">Copy session id</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const authBtn = document.getElementById('authBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const callBtn = document.getElementById('callBtn');
+      const callUrlBtn = document.getElementById('callUrlBtn');
+      const healthBtn = document.getElementById('healthBtn');
+      const delBtn = document.getElementById('delBtn');
+      const copyBtn = document.getElementById('copyBtn');
+
+      const sessionEl = document.getElementById('sessionId');
+      const authResult = document.getElementById('authResult');
+      const lastResp = document.getElementById('lastResp');
+
+      function setSession(id){ sessionEl.value = id || ''; if(id) localStorage.setItem('motorSessionId', id); else localStorage.removeItem('motorSessionId') }
+      setSession(localStorage.getItem('motorSessionId'));
+
+      function setPath(p){ document.getElementById('path').value = p }
+
+      authBtn.onclick = async ()=>{
+        authResult.textContent = 'authenticating...';
+        const cardNumber = document.getElementById('cardNumber').value;
+        try{
+          const res = await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cardNumber})});
+          const headers = {};
+          for(const [k,v] of res.headers) headers[k]=v;
+          const body = await res.json().catch(()=>null);
+          authResult.textContent = JSON.stringify({ status: res.status, headers, body }, null, 2);
+          if(res.ok && body && body.sessionId){ setSession(body.sessionId); navigator.clipboard.writeText(body.sessionId).catch(()=>{}); }
+        }catch(e){ authResult.textContent = 'Error: '+e.message }
+      };
+
+      clearBtn.onclick = ()=>{ setSession(null); lastResp.textContent=''; authResult.textContent='Session cleared' };
+
+      async function sendRequest(useUrl=false){
+        const method = document.getElementById('method').value;
+        const path = document.getElementById('path').value.replace(/^\/+/, '');
+        const body = document.getElementById('body').value;
+        const sessionId = sessionEl.value;
+        const urlBase = '/api/motorv1/';
+
+        let url = urlBase + path;
+        const opts = { method, headers: {} };
+        if(!useUrl){ opts.headers['X-Session-Id'] = sessionId }
+        else { url = '/api/motorv1-session/' + encodeURIComponent(sessionId) + '/' + path }
+
+        if(['POST','PUT'].includes(method) && body) opts.body = body;
+
+        try{
+          const resp = await fetch(url, opts);
+          const headers = {};
+          for(const [k,v] of resp.headers) headers[k]=v;
+          let respBody;
+          const ct = resp.headers.get('content-type') || '';
+          if(ct.includes('application/json')) respBody = await resp.json(); else respBody = await resp.text();
+          lastResp.textContent = JSON.stringify({ status: resp.status, headers, body: respBody }, null, 2);
+        }catch(e){ lastResp.textContent = 'Error: '+e.message }
+      }
+
+      callBtn.onclick = ()=> sendRequest(false);
+      callUrlBtn.onclick = ()=> sendRequest(true);
+
+      healthBtn.onclick = async ()=>{
+        try{ const r=await fetch('/health'); const j=await r.json(); lastResp.textContent = JSON.stringify({status:r.status, body:j},null,2) }catch(e){ lastResp.textContent='Error: '+e.message }
+      };
+
+      delBtn.onclick = async ()=>{
+        const id = sessionEl.value; if(!id) return alert('no session');
+        try{ const r = await fetch('/api/session/'+encodeURIComponent(id),{method:'DELETE'}); const j = await r.json(); lastResp.textContent = JSON.stringify({status:r.status, body:j},null,2); if(r.ok) setSession(null) }catch(e){ lastResp.textContent='Error: '+e.message }
+      };
+
+      copyBtn.onclick = ()=>{ if(sessionEl.value) navigator.clipboard.writeText(sessionEl.value).then(()=>alert('copied')) };
+    </script>
+  </body>
+</html>
