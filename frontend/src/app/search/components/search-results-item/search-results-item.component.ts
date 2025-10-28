@@ -22,4 +22,20 @@ export class SearchResultsItemComponent {
   get id() {
     return this.details.id;
   }
+
+  get thumbnailUrl(): string {
+    const t = (this.details && (this.details as any).thumbnailHref) || '';
+    if (!t) return '';
+    // If already absolute (http/https) return as-is
+    if (/^https?:\/\//i.test(t)) return t;
+    // Make relative paths absolute to the site root to avoid missing-slash issues
+    return '/' + t.replace(/^\/+/, '');
+  }
+
+  imgError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    if (img && img.src) {
+      img.src = 'assets/images/vehicle-select.svg';
+    }
+  }
 }

@@ -10,10 +10,9 @@
 <div *ngIf="isFullScreen && details.thumbnailHref; else noThumbnail" class="d-inline-flex flex-column thumbnail-container">
   <img
     *ngIf="isFullScreen && details.thumbnailHref"
-    [lazyLoad]="details.thumbnailHref"
-    [defaultImage]="'assets/images/vehicle-select.svg'"
-    [errorImage]="'assets/images/vehicle-select.svg'"
-    [attr.title]="details.thumbnailHref"
+    [src]="thumbnailUrl"
+    (error)="imgError($event)"
+    [attr.title]="thumbnailUrl"
     height="110"
     width="120"
   />
