@@ -24,7 +24,12 @@ export class SearchResultsItemComponent {
   }
 
   get thumbnailUrl(): string {
-    const t = (this.details && (this.details as any).thumbnailHref) || '';
+    let t = (this.details && (this.details as any).thumbnailHref) || '';
+    if (!t) return '';
+    // Some malformed values may include extra text (e.g. "220 Request Method GET").
+    // Trim at first whitespace/newline to be safe.
+    t = String(t).trim().split(/\s+/)[0];
+    // If it still looks empty, bail out
     if (!t) return '';
     // If already absolute (http/https) return as-is
     if (/^https?:\/\//i.test(t)) return t;
