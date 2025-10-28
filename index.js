@@ -219,6 +219,71 @@ app.all('/api/ebsco-proxy/*', async (req, res) => {
   }
 });
 
+// ALL /api/motor-proxy/* - Proxy endpoint for Motor.com M1 API
+// Uses authentication token from EBSCO (passed via X-Auth-Token header)
+app.all('/api/motor-proxy/*', async (req, res) => {
+  try {
+    const authToken = req.headers['x-auth-token'];
+    
+    if (!authToken) {
+      return res.status(401).json({ 
+        error: 'X-Auth-Token header is required',
+        message: 'Authenticate first using POST /api/auth/ebsco to get the auth token'
+      });
+    }
+
+    // Extract the path after /api/motor-proxy/
+    const targetPath = req.path.replace('/api/motor-proxy', '');
+    const targetUrl = `https://sites.motor.com/m1${targetPath}`;
+
+    console.log(`Proxying ${req.method} request to:`, targetUrl);
+
+    // Forward the request with the auth token as a cookie
+    // The EBSCO auth token contains the Motor.com M1 API credentials
+    const proxyConfig = {
+      method: req.method,
+      url: targetUrl,
+      headers: {
+        ...req.headers,
+        'Cookie': authToken,
+        'host': undefined, // Remove original host header
+        'x-auth-token': undefined // Remove our custom header
+      },
+      data: req.body,
+      params: req.query,
+      maxRedirects: 5,
+      validateStatus: (status) => status >= 200 && status < 600 // Accept all statuses
+    };
+
+    const proxyResponse = await axios(proxyConfig);
+
+    // Forward response headers (except connection-related ones)
+    const headersToForward = { ...proxyResponse.headers };
+    delete headersToForward['connection'];
+    delete headersToForward['transfer-encoding'];
+    
+    res.status(proxyResponse.status).set(headersToForward).send(proxyResponse.data);
+
+  } catch (error) {
+    console.error('Motor proxy error:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+      res.status(error.response.status).json({
+        error: 'Proxy request failed',
+        message: error.message,
+        status: error.response.status,
+        data: error.response.data
+      });
+    } else {
+      res.status(500).json({
+        error: 'Proxy request failed',
+        message: error.message
+      });
+    }
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -226,7 +291,11 @@ app.get('/health', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`EBSCO Auth endpoint: POST http://localhost:${PORT}/api/auth/ebsco`);
-  console.log(`EBSCO Proxy endpoint: * http://localhost:${PORT}/api/ebsco-proxy/*`);
+  console.log(`\n🚀 Proxy Server is running on http://localhost:${PORT}\n`);
+  console.log(`📡 Available endpoints:`);
+  console.log(`   EBSCO Auth:      POST http://localhost:${PORT}/api/auth/ebsco`);
+  console.log(`   EBSCO Proxy:     *    http://localhost:${PORT}/api/ebsco-proxy/*`);
+  console.log(`   Motor.com Proxy: *    http://localhost:${PORT}/api/motor-proxy/*`);
+  console.log(`   Health Check:    GET  http://localhost:${PORT}/health\n`);
+  console.log(`ℹ️  Note: EBSCO authentication returns credentials for Motor.com M1 API`);
 });
