@@ -1,0 +1,3 @@
+[submodule "motorproxy/cruis-api"]
+	path = motorproxy/cruis-api
+	url = https://github.com/lucron9090/cruis-api.git
