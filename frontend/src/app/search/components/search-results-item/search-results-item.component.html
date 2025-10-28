@@ -8,7 +8,15 @@
 </ng-container>
 
 <div *ngIf="isFullScreen && details.thumbnailHref; else noThumbnail" class="d-inline-flex flex-column thumbnail-container">
-  <img *ngIf="isFullScreen && details.thumbnailHref" [lazyLoad]="details.thumbnailHref" height="110" width="120" />
+  <img
+    *ngIf="isFullScreen && details.thumbnailHref"
+    [lazyLoad]="details.thumbnailHref"
+    [defaultImage]="'assets/images/vehicle-select.svg'"
+    [errorImage]="'assets/images/vehicle-select.svg'"
+    [attr.title]="details.thumbnailHref"
+    height="110"
+    width="120"
+  />
   <div class="title" [class.align-right]="details.id==='-997' || details.id==='-998' || details.id==='-999'" *ngIf="details.title" [innerHTML]="details.title"></div>
   <div *ngIf="details.subtitle" class="document-subtitle" [innerHTML]="details.subtitle"></div>
 </div>
