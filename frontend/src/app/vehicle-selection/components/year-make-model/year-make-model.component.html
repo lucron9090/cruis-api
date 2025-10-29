@@ -217,7 +217,7 @@
                   <select id="recentVehicle" class="form-select" [ngModel]="recentVehicle" (ngModelChange)="navigateToVehicle($event)">
                     <option disabled hidden [ngValue]="undefined">Select Recent Vehicle</option>
                     <option *ngFor="let vehicle of vehicleSelectionFacade.getSelectedVehicles()" [ngValue]="vehicle">
-                      {{ vehicle.vehicleName + '&nbsp;&nbsp;&nbsp;' }}
+                      {{ vehicle.vehicleName }}
                     </option>
                   </select>
                 </div>

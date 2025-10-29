@@ -1,10 +1,37 @@
 // Modern Vehicle Selection Component Styles
 
+// CSS Custom Properties
+:host {
+  --primary-color: #667eea;
+  --primary-dark: #5568d3;
+  --secondary-color: #764ba2;
+  --secondary-dark: #63408a;
+  --text-primary: #2d3748;
+  --text-secondary: #718096;
+  --border-color: #e2e8f0;
+  --error-bg: #fee;
+  --error-border: #fcc;
+  --error-text: #c53030;
+  --bg-light: #f5f7fa;
+  --bg-lighter: #e9ecef;
+}
+
+// Animations at root level for better performance
+@keyframes pulse {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.1) translate(5%, 5%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
 .vehicle-selection-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   position: relative;
   overflow: hidden;
 
@@ -19,11 +46,6 @@
     background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
     animation: pulse 15s ease-in-out infinite;
   }
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1) translate(0, 0); }
-  50% { transform: scale(1.1) translate(5%, 5%); }
 }
 
 // Header
@@ -56,13 +78,13 @@
   .logo-icon {
     width: 40px;
     height: 40px;
-    color: #667eea;
+    color: var(--primary-color);
   }
 
   .app-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #2d3748;
+    color: var(--text-primary);
     margin: 0;
   }
 }
@@ -121,15 +143,10 @@
     animation: float 6s ease-in-out infinite;
   }
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-  }
-
   .welcome-title {
     font-size: 2rem;
     font-weight: 700;
-    color: #2d3748;
+    color: var(--text-primary);
     margin-bottom: 1rem;
     text-align: center;
   }
@@ -153,26 +170,26 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-lighter) 100%);
     border-radius: 10px;
     transition: all 0.3s ease;
 
     &:hover {
-      background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+      background: linear-gradient(135deg, var(--bg-lighter) 0%, #dee2e6 100%);
       transform: translateX(10px);
     }
 
     .feature-icon {
       width: 24px;
       height: 24px;
-      color: #667eea;
+      color: var(--primary-color);
       flex-shrink: 0;
     }
 
     span {
       font-size: 1rem;
       font-weight: 500;
-      color: #2d3748;
+      color: var(--text-primary);
     }
   }
 }
@@ -201,13 +218,13 @@
   .card-title {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #2d3748;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
   }
 
   .card-subtitle {
     font-size: 1rem;
-    color: #718096;
+    color: var(--text-secondary);
   }
 }
 
@@ -230,22 +247,22 @@
   gap: 0.5rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text-primary);
 
   .label-icon {
     width: 20px;
     height: 20px;
-    color: #667eea;
+    color: var(--primary-color);
   }
 }
 
 .form-select, .form-input {
   padding: 0.875rem 1rem;
   font-size: 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border-color);
   border-radius: 10px;
   background: white;
-  color: #2d3748;
+  color: var(--text-primary);
   transition: all 0.3s ease;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
@@ -255,13 +272,13 @@
   cursor: pointer;
 
   &:hover {
-    border-color: #667eea;
+    border-color: var(--primary-color);
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
   }
 
   &:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
   }
 
@@ -298,14 +315,14 @@
     padding: 0 1rem;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #718096;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 }
 
 .vin-search-card {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-lighter) 100%);
   border-radius: 15px;
   padding: 1.5rem;
 }
@@ -313,13 +330,13 @@
 .vin-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
 .vin-subtitle {
   font-size: 0.875rem;
-  color: #718096;
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
@@ -358,11 +375,11 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: white;
 
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #5568d3 0%, #63408a 100%);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
   }
@@ -393,10 +410,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.875rem 1rem;
-  background: #fee;
-  border: 1px solid #fcc;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   border-radius: 8px;
-  color: #c53030;
+  color: var(--error-text);
   font-size: 0.95rem;
 
   .error-icon {
@@ -428,7 +445,7 @@
 
   .footer-text {
     text-align: center;
-    color: #718096;
+    color: var(--text-secondary);
     font-size: 0.875rem;
     margin: 0;
   }
