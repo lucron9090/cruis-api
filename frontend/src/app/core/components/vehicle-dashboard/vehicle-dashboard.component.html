@@ -1,83 +1,132 @@
 <div class="vehicle-dashboard" *ngIf="vehicleInfo$ | async as vehicle">
-  <div class="dashboard-container">
-    <!-- Vehicle Header Card -->
-    <div class="vehicle-header-card">
-      <div class="vehicle-icon-wrapper">
-        <svg class="vehicle-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+  <!-- Compact Vehicle Header -->
+  <div class="vehicle-header">
+    <div class="vehicle-badge">
+      <svg class="badge-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+    <div class="vehicle-details">
+      <h1 class="vehicle-title">{{ vehicle.name }}</h1>
+      <p class="vehicle-meta" *ngIf="vehicle.vin">VIN: {{ vehicle.vin }}</p>
+    </div>
+    <button class="change-vehicle-btn" [routerLink]="['/vehicles']" title="Change Vehicle">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Welcome Message -->
+  <div class="welcome-section">
+    <h2 class="welcome-title">What would you like to find?</h2>
+    <p class="welcome-subtitle">Select a category below to explore documentation, diagrams, and service information</p>
+  </div>
+
+  <!-- Quick Access Grid -->
+  <div class="quick-access-grid">
+    <!-- Maintenance Schedules -->
+    <a class="access-card card-primary" [routerLink]="[]" [queryParams]="{articleIdTrail: '-998'}" queryParamsHandling="merge">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="vehicle-info">
-        <h2 class="vehicle-name">{{ vehicle.name }}</h2>
-        <p class="vehicle-source">Source: {{ vehicle.contentSource }}</p>
+      <div class="card-content">
+        <h3 class="card-title">Maintenance Schedules</h3>
+        <p class="card-description">View scheduled maintenance intervals and service requirements</p>
       </div>
-    </div>
+      <div class="card-arrow">→</div>
+    </a>
 
-    <!-- Vehicle Details Grid -->
-    <div class="details-grid">
-      <!-- Year Card -->
-      <div class="detail-card" *ngIf="vehicle.year">
-        <div class="detail-icon-wrapper">
-          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-            <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="detail-content">
-          <span class="detail-label">Year</span>
-          <span class="detail-value">{{ vehicle.year }}</span>
-        </div>
-      </div>
-
-      <!-- Make Card -->
-      <div class="detail-card" *ngIf="vehicle.make">
-        <div class="detail-icon-wrapper">
-          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 9L12 2L21 9V20C21 21.1 20.1 22 19 22H5C3.9 22 3 21.1 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="detail-content">
-          <span class="detail-label">Make</span>
-          <span class="detail-value">{{ vehicle.make }}</span>
-        </div>
-      </div>
-
-      <!-- Model Card -->
-      <div class="detail-card" *ngIf="vehicle.model">
-        <div class="detail-icon-wrapper">
-          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7V11C2 16.55 6.84 21.74 12 23C17.16 21.74 22 16.55 22 11V7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="detail-content">
-          <span class="detail-label">Model</span>
-          <span class="detail-value">{{ vehicle.model }}</span>
-        </div>
-      </div>
-
-      <!-- VIN Card -->
-      <div class="detail-card detail-card-wide" *ngIf="vehicle.vin">
-        <div class="detail-icon-wrapper">
-          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16Z" fill="currentColor"/>
-          </svg>
-        </div>
-        <div class="detail-content">
-          <span class="detail-label">VIN</span>
-          <span class="detail-value vin-value">{{ vehicle.vin }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-      <button class="action-btn action-btn-primary" [routerLink]="['/vehicles']">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15 12C15 13.66 13.66 15 12 15C10.34 15 9 13.66 9 12C9 10.34 10.34 9 12 9C13.66 9 15 10.34 15 12Z" stroke="currentColor" stroke-width="2"/>
-          <path d="M2.458 12C3.732 7.943 7.523 5 12 5C16.477 5 20.268 7.943 21.542 12C20.268 16.057 16.477 19 12 19C7.523 19 3.732 16.057 2.458 12Z" stroke="currentColor" stroke-width="2"/>
+    <!-- Procedures -->
+    <a class="access-card card-secondary" [routerLink]="['/docs/Procedures']" [queryParams]="{}" queryParamsHandling="merge">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+          <path d="M14 2V8H20" stroke="currentColor" stroke-width="2"/>
+          <path d="M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        Change Vehicle
-      </button>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Repair Procedures</h3>
+        <p class="card-description">Step-by-step repair and service procedures</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <!-- Diagrams -->
+    <a class="access-card card-tertiary" [routerLink]="['/docs/Diagrams']" [queryParams]="{}" queryParamsHandling="merge">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+          <path d="M9 9H9.01M15 9H15.01M9 15H9.01M15 15H15.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Wiring & Component Diagrams</h3>
+        <p class="card-description">Electrical schematics and component locations</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <!-- Diagnostic Codes -->
+    <a class="access-card card-warning" [routerLink]="['/docs/Diagnostic Codes']" [queryParams]="{}" queryParamsHandling="merge">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Diagnostic Trouble Codes</h3>
+        <p class="card-description">DTC definitions and troubleshooting guides</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <!-- Specifications -->
+    <a class="access-card card-info" [routerLink]="['/docs/Specs']" [queryParams]="{}" queryParamsHandling="merge">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="2"/>
+          <path d="M9 12h6M9 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Technical Specifications</h3>
+        <p class="card-description">Detailed technical specs and capacities</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <!-- Service Bulletins -->
+    <a class="access-card card-success" [routerLink]="['/docs/Service Bulletins']" [queryParams]="{}" queryParamsHandling="merge">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Service Bulletins</h3>
+        <p class="card-description">TSBs and technical updates</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+  </div>
+
+  <!-- Help Section -->
+  <div class="help-section">
+    <div class="help-card">
+      <svg class="help-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="help-content">
+        <h4 class="help-title">Need Help?</h4>
+        <p class="help-text">Use the tree menu on the left to browse all categories, or use the search box at the top to find specific topics.</p>
+      </div>
     </div>
   </div>
 </div>
