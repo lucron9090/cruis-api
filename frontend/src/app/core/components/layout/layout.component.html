@@ -63,9 +63,14 @@
     <ng-container *ngIf="layoutFacade.isSplashImageVisible$ | async; then splashImage; else articleArea"></ng-container>
 
     <ng-template #splashImage>
-      <div class="d-flex justify-content-center align-items-center p-4 h-100">
-        <img id="splashImage" [src]="userSettingsService.splashUrl$ | async" class="mw-100 mh-100" />
-      </div>
+      <ng-container *ngIf="vehicleSelectionFacade.activeVehicleId$ | async; else defaultSplash">
+        <mtr-vehicle-dashboard></mtr-vehicle-dashboard>
+      </ng-container>
+      <ng-template #defaultSplash>
+        <div class="d-flex justify-content-center align-items-center p-4 h-100">
+          <img id="splashImage" [src]="userSettingsService.splashUrl$ | async" class="mw-100 mh-100" />
+        </div>
+      </ng-template>
     </ng-template>
 
     <ng-template #articleArea>

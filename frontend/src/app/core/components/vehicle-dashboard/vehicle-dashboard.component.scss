@@ -1,0 +1,301 @@
+// Vehicle Dashboard Styles
+
+:host {
+  --dashboard-primary: #667eea;
+  --dashboard-primary-dark: #5568d3;
+  --dashboard-secondary: #764ba2;
+  --dashboard-text: #2d3748;
+  --dashboard-text-light: #718096;
+  --dashboard-bg: #f7fafc;
+  --dashboard-card-bg: #ffffff;
+  --dashboard-border: #e2e8f0;
+  --dashboard-shadow: rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-dashboard {
+  padding: 1.5rem;
+  background: var(--dashboard-bg);
+  min-height: 100%;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Vehicle Header Card
+.vehicle-header-card {
+  background: linear-gradient(135deg, var(--dashboard-primary) 0%, var(--dashboard-secondary) 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 10px 30px var(--dashboard-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  @media (max-width: 576px) {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+}
+
+.vehicle-icon-wrapper {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .vehicle-icon {
+    width: 48px;
+    height: 48px;
+    color: white;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+    
+    @media (max-width: 576px) {
+      width: 40px;
+      height: 40px;
+    }
+  }
+}
+
+.vehicle-info {
+  flex: 1;
+  color: white;
+  
+  .vehicle-name {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+    }
+    
+    @media (max-width: 576px) {
+      font-size: 1.25rem;
+    }
+  }
+  
+  .vehicle-source {
+    font-size: 1rem;
+    margin: 0;
+    opacity: 0.9;
+    font-weight: 500;
+    
+    @media (max-width: 576px) {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Details Grid
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-card {
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px var(--dashboard-shadow);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    border-color: var(--dashboard-primary);
+  }
+  
+  &-wide {
+    grid-column: span 2;
+    
+    @media (max-width: 768px) {
+      grid-column: span 1;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    padding: 1.25rem;
+  }
+}
+
+.detail-icon-wrapper {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  .detail-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--dashboard-primary);
+    
+    @media (max-width: 576px) {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+  
+  .detail-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--dashboard-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    
+    @media (max-width: 576px) {
+      font-size: 0.75rem;
+    }
+  }
+  
+  .detail-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dashboard-text);
+    
+    @media (max-width: 576px) {
+      font-size: 1.1rem;
+    }
+  }
+  
+  .vin-value {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    word-break: break-all;
+    
+    @media (max-width: 576px) {
+      font-size: 0.95rem;
+    }
+  }
+}
+
+// Quick Actions
+.quick-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  
+  @media (max-width: 576px) {
+    flex-direction: column;
+  }
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  
+  .btn-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+  }
+  
+  @media (max-width: 576px) {
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+.action-btn-primary {
+  background: linear-gradient(135deg, var(--dashboard-primary) 0%, var(--dashboard-secondary) 100%);
+  color: white;
+  
+  &:hover {
+    background: linear-gradient(135deg, var(--dashboard-primary-dark) 0%, #63408a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detail-card {
+  animation: fadeIn 0.5s ease-out;
+  
+  @for $i from 1 through 6 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.1}s;
+    }
+  }
+}
+
+// Dark mode support (optional)
+@media (prefers-color-scheme: dark) {
+  :host {
+    --dashboard-bg: #1a202c;
+    --dashboard-card-bg: #2d3748;
+    --dashboard-text: #e2e8f0;
+    --dashboard-text-light: #a0aec0;
+    --dashboard-border: #4a5568;
+    --dashboard-shadow: rgba(0, 0, 0, 0.3);
+  }
+}
+

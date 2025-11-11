@@ -22,6 +22,7 @@ import { GeoBlockingModalComponent } from './core/components/geo-blocking-modal/
 import { HorizontalCirclesLoaderComponent } from './core/components/horizontal-circles-loader/horizontal-circles-loader.component';
 import { LayoutComponent } from './core/components/layout/layout.component';
 import { NavHeaderComponent } from './core/components/nav-header/nav-header.component';
+import { VehicleDashboardComponent } from './core/components/vehicle-dashboard/vehicle-dashboard.component';
 import { GlobalErrorHandler } from './core/error-handling.ts/global-error-handler';
 import { ProxyAuthInterceptor } from './core/proxy-auth.interceptor';
 import { UserSettingsService } from './core/user-settings/user-settings.service';
@@ -63,6 +64,7 @@ import { YearMakeModelComponent } from './vehicle-selection/components/year-make
     LaborOperationComponent,
     GeoBlockingModalComponent,
     DeltaReportComponent,
+    VehicleDashboardComponent,
   ],
   imports: [
     BrowserModule,

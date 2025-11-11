@@ -193,10 +193,14 @@ app.all('/api/motor-proxy/*', async (req, res) => {
     
     console.log(`[PROXY] Forwarding to: ${targetUrl}`);
     
+    // Check if this is an image/binary request based on path
+    const isImageRequest = targetPath.includes('/graphic/') || 
+                          targetPath.match(/\.(jpg|jpeg|png|gif|svg|webp|bmp)$/i);
+    
     // Prepare headers
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
-      'Accept': 'application/json, text/plain, */*',
+      'Accept': isImageRequest ? 'image/*, */*' : 'application/json, text/plain, */*',
       'Accept-Language': 'en-US,en;q=0.9',
       'Accept-Encoding': 'gzip, deflate, br',
       'Connection': 'keep-alive',
@@ -216,16 +220,17 @@ app.all('/api/motor-proxy/*', async (req, res) => {
       headers: headers,
       data: req.body,
       timeout: 30000,
+      responseType: isImageRequest ? 'arraybuffer' : 'json', // Handle binary data for images
       validateStatus: () => true // Don't throw on HTTP error status codes
     });
     
-    console.log(`[PROXY] Response: ${response.status} ${response.statusText}`);
+    console.log(`[PROXY] Response: ${response.status} ${response.statusText} (${isImageRequest ? 'binary' : 'json'})`);
     
     // Forward the response with proper CORS headers
     res.status(response.status);
     
     // Copy safe headers from response
-    const safeHeaders = ['content-type', 'content-encoding', 'content-length'];
+    const safeHeaders = ['content-type', 'content-encoding', 'content-length', 'cache-control', 'etag', 'last-modified'];
     safeHeaders.forEach(header => {
       if (response.headers[header]) {
         res.set(header, response.headers[header]);
@@ -237,7 +242,12 @@ app.all('/api/motor-proxy/*', async (req, res) => {
     res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     
-    res.send(response.data);
+    // Send binary data as buffer for images, otherwise as JSON
+    if (isImageRequest) {
+      res.send(Buffer.from(response.data));
+    } else {
+      res.send(response.data);
+    }
     
   } catch (error) {
     console.error('[PROXY] Error:', error.message);

@@ -1,0 +1,164 @@
+// Search Results Item Responsive Styles
+
+:host {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  @media (max-width: 768px) {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  @media (max-width: 576px) {
+    padding: 0.5rem;
+  }
+  
+  &:hover {
+    background-color: #f7fafc;
+  }
+  
+  &.selected {
+    background-color: #edf2f7;
+    border-left: 3px solid #667eea;
+  }
+  
+  &.full-screen {
+    padding: 1rem 1.25rem;
+    
+    @media (max-width: 768px) {
+      padding: 0.75rem 1rem;
+    }
+    
+    @media (max-width: 576px) {
+      padding: 0.5rem 0.75rem;
+    }
+  }
+}
+
+// DTC Code and Description
+.dtc-code {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+  color: #2d3748;
+  
+  @media (max-width: 576px) {
+    font-size: 0.875rem;
+  }
+}
+
+.dtc-description {
+  display: block;
+  font-size: 0.875rem;
+  color: #718096;
+  line-height: 1.5;
+  
+  @media (max-width: 576px) {
+    font-size: 0.8rem;
+  }
+}
+
+// Bulletin Info
+.release-date,
+.bulletin-number {
+  display: inline-block;
+  font-size: 0.875rem;
+  margin-right: 1rem;
+  color: #4a5568;
+  
+  @media (max-width: 576px) {
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+  }
+}
+
+// Thumbnail Container
+.thumbnail-container {
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  
+  img {
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+    
+    @media (max-width: 768px) {
+      height: 80px !important;
+      width: 90px !important;
+    }
+    
+    @media (max-width: 576px) {
+      height: 60px !important;
+      width: 70px !important;
+    }
+  }
+}
+
+// Title Styles
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  line-height: 1.5;
+  margin: 0.25rem 0;
+  
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
+  
+  @media (max-width: 576px) {
+    font-size: 0.875rem;
+  }
+  
+  &.align-right {
+    text-align: right;
+    
+    @media (max-width: 576px) {
+      text-align: left;
+    }
+  }
+}
+
+// Subtitle
+.document-subtitle {
+  font-size: 0.875rem;
+  color: #718096;
+  line-height: 1.5;
+  margin-top: 0.25rem;
+  
+  @media (max-width: 576px) {
+    font-size: 0.8rem;
+  }
+}
+
+// Truncate long text
+.title,
+.document-subtitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  
+  @media (max-width: 576px) {
+    -webkit-line-clamp: 2;
+  }
+}
+
+// Image error fallback
+img[src*="vehicle-select.svg"] {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
