@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { combineLatest, Observable } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { combineLatest, Observable, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { UserSettingsService } from '~/core/user-settings/user-settings.service';
 import { ContentSource } from '~/generated/api/models';
 import { filterNullish } from '~/utilities';
@@ -38,22 +38,35 @@ export class VehicleDashboardComponent {
     switchMap(([vehicleId, contentSource, vin, motorVehicleId]) =>
       this.vehicleSelectionFacade.getVehicleYMM(contentSource, motorVehicleId ?? vehicleId).pipe(
         map((vehicleName) => {
-          if (!vehicleName) return null;
+          // Handle case where vehicle name might not be available
+          const displayName = vehicleName || 'Vehicle Selected';
           
           // Parse year, make, model from vehicle name (format: "2020 Toyota Camry")
-          const parts = vehicleName.split(' ');
-          const year = parts.length > 0 ? parts[0] : undefined;
+          const parts = displayName.split(' ');
+          const year = parts.length > 0 && !isNaN(Number(parts[0])) ? parts[0] : undefined;
           const make = parts.length > 1 ? parts[1] : undefined;
-          const model = parts.length > 2 ? parts.slice(2).join(' ') : undefined;
+          const model = parts.length > 2 ? parts.slice(2).join(' ') : displayName;
           
           return {
-            name: vehicleName,
+            name: displayName,
             year,
             make,
             model,
             vin: vin || undefined,
             contentSource: contentSource === ContentSource.Motor ? 'Motor' : contentSource
           } as VehicleInfo;
+        }),
+        catchError(error => {
+          console.warn('Error fetching vehicle name, using fallback', error);
+          // Return a fallback vehicle info object
+          return of({
+            name: 'Vehicle Selected',
+            year: undefined,
+            make: undefined,
+            model: 'Please select a vehicle',
+            vin: vin || undefined,
+            contentSource: contentSource === ContentSource.Motor ? 'Motor' : contentSource
+          } as VehicleInfo);
         })
       )
     ),

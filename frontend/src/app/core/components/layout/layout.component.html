@@ -60,15 +60,17 @@
     <mtr-search-results-panel *ngFor="let _ of [searchPanelRecreationTrigger$ | async]"></mtr-search-results-panel>
   </div>
   <div id="rightPane">
-    <ng-container *ngIf="layoutFacade.isSplashImageVisible$ | async; then splashImage; else articleArea"></ng-container>
+    <ng-container *ngIf="(assetsFacade.hasContentId$ | async) || (assetsFacade.isMaintenanceScheduleTab$ | async); else dashboardOrSplash">
+      <ng-container *ngTemplateOutlet="articleArea"></ng-container>
+    </ng-container>
 
-    <ng-template #splashImage>
+    <ng-template #dashboardOrSplash>
       <ng-container *ngIf="vehicleSelectionFacade.activeVehicleId$ | async; else defaultSplash">
         <mtr-vehicle-dashboard></mtr-vehicle-dashboard>
       </ng-container>
       <ng-template #defaultSplash>
-        <div class="d-flex justify-content-center align-items-center p-4 h-100">
-          <img id="splashImage" [src]="userSettingsService.splashUrl$ | async" class="mw-100 mh-100" />
+        <div class="splash-container">
+          <img id="splashImage" [src]="userSettingsService.splashUrl$ | async" class="splash-image" />
         </div>
       </ng-template>
     </ng-template>
