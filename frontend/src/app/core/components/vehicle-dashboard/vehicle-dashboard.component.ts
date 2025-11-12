@@ -5,6 +5,8 @@ import { UserSettingsService } from '~/core/user-settings/user-settings.service'
 import { ContentSource } from '~/generated/api/models';
 import { filterNullish } from '~/utilities';
 import { VehicleSelectionFacade } from '~/vehicle-selection/state/state/vehicle-selection.facade';
+import { SearchResultsFacade } from '~/search/state/search-results.facade';
+import { AssetsFacade } from '~/assets/state/assets.facade';
 
 interface VehicleInfo {
   name: string;
@@ -25,7 +27,9 @@ interface VehicleInfo {
 export class VehicleDashboardComponent {
   constructor(
     public vehicleSelectionFacade: VehicleSelectionFacade,
-    public userSettingsService: UserSettingsService
+    public userSettingsService: UserSettingsService,
+    public searchResultsFacade: SearchResultsFacade,
+    public assetsFacade: AssetsFacade
   ) {}
 
   vehicleInfo$: Observable<VehicleInfo | null> = combineLatest([
@@ -71,6 +75,26 @@ export class VehicleDashboardComponent {
       )
     ),
     distinctUntilChanged()
+  );
+
+  // KPI counts for each filter tab (e.g., Procedures, Diagrams, etc.)
+  kpiCounts$ = this.searchResultsFacade.filterTabCounts$;
+
+  // Recent items from current results (best-effort). We show the first few entries.
+  recentArticles$ = this.searchResultsFacade.all$.pipe(
+    map((articles) => (articles ?? []).slice(0, 6))
+  );
+
+  // Bookmark support (continue reading). Produces query params needed by backend (needs root article id present).
+  bookmarkParams$ = combineLatest([
+    this.assetsFacade.bookmarkId$,
+    this.assetsFacade.rootId$,
+  ]).pipe(
+    map(([bookmarkId, rootId]) => {
+      if (!bookmarkId) return undefined;
+      // Prefer an existing rootId in the URL; if absent, link will still include bookmarkId and rely on current route state.
+      return rootId ? { bookmarkId, articleIdTrail: rootId } : { bookmarkId };
+    })
   );
 }
 
