@@ -19,15 +19,15 @@ form.input-group {
 }
 
 .form-control {
-  border-radius: 8px 0 0 8px;
-  border: 2px solid #e2e8f0;
-  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border: 2px solid var(--border-light);
+  padding: var(--space-sm) var(--space-md);
   font-size: 0.95rem;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   
   &:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px var(--primary-100);
     outline: none;
   }
   
@@ -70,14 +70,14 @@ form.input-group {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%);
   border: none;
-  color: white;
+  color: var(--text-inverse);
   
   &:hover {
-    background: linear-gradient(135deg, #5568d3 0%, #63408a 100%);
+    background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-900) 100%);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: var(--shadow-md);
   }
   
   &:active {
@@ -85,7 +85,7 @@ form.input-group {
   }
   
   &:focus {
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 0 0 3px var(--primary-200);
     outline: none;
   }
 }
