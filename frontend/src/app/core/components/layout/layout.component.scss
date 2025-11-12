@@ -1,72 +1,107 @@
-// Layout Component Responsive Styles
+// Modern Layout Component - Complete Redesign
 
 :host {
   display: block;
   height: 100vh;
   overflow: hidden;
+  background: linear-gradient(135deg, var(--neutral-50) 0%, var(--bg-primary) 100%);
 }
 
 #contentPanes {
   display: flex;
-  height: calc(100vh - 180px);
+  height: calc(100vh - 80px);
   overflow: hidden;
+  gap: 0;
+  background: var(--bg-primary);
   
   @media (max-width: 992px) {
     flex-direction: column;
-    height: calc(100vh - 160px);
+    height: calc(100vh - 70px);
   }
   
   @media (max-width: 576px) {
-    height: calc(100vh - 140px);
+    height: calc(100vh - 60px);
   }
 }
 
 #leftPane {
-  width: 280px;
-  min-width: 280px;
-  border-right: 1px solid #e2e8f0;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border-light);
   overflow-y: auto;
-  transition: all 0.3s ease;
-  background: #ffffff;
+  overflow-x: hidden;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  z-index: 10;
+  
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--neutral-300);
+    border-radius: var(--radius-full);
+    
+    &:hover {
+      background: var(--neutral-400);
+    }
+  }
   
   &.expanded {
-    width: 480px;
-    min-width: 480px;
+    width: 520px;
+    min-width: 520px;
+    max-width: 520px;
   }
   
   &.collapsed {
     width: 0;
     min-width: 0;
+    max-width: 0;
     border-right: none;
     overflow: hidden;
+    box-shadow: none;
   }
   
   @media (max-width: 1200px) {
-    width: 260px;
-    min-width: 260px;
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
     
     &.expanded {
-      width: 420px;
-      min-width: 420px;
+      width: 460px;
+      min-width: 460px;
+      max-width: 460px;
     }
   }
   
   @media (max-width: 992px) {
     width: 100%;
     min-width: 100%;
-    max-height: 40vh;
+    max-width: 100%;
+    max-height: 45vh;
     border-right: none;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border-light);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     
     &.expanded {
       width: 100%;
       min-width: 100%;
-      max-height: 60vh;
+      max-width: 100%;
+      max-height: 65vh;
     }
     
     &.collapsed {
       max-height: 0;
       border-bottom: none;
+      overflow: hidden;
     }
   }
 }
@@ -74,7 +109,27 @@
 #rightPane {
   flex: 1;
   overflow-y: auto;
-  background: #ffffff;
+  overflow-x: hidden;
+  background: var(--bg-primary);
+  position: relative;
+  
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--neutral-300);
+    border-radius: var(--radius-full);
+    
+    &:hover {
+      background: var(--neutral-400);
+    }
+  }
   
   @media (max-width: 992px) {
     flex: 1;
@@ -85,22 +140,29 @@
 .top-control-container {
   display: flex;
   align-items: center;
-  padding: 0.625rem 0.875rem;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  min-height: 48px;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-light);
+  min-height: 56px;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-md);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: var(--shadow-xs);
   
   @media (max-width: 768px) {
-    padding: 0.5rem 0.75rem;
-    min-height: 44px;
+    padding: var(--space-sm) var(--space-md);
+    min-height: 52px;
   }
   
   @media (max-width: 576px) {
-    padding: 0.5rem;
+    padding: var(--space-sm);
     flex-direction: column;
     align-items: flex-start;
+    gap: var(--space-sm);
   }
   
   &.border-right {
@@ -112,10 +174,13 @@
   .item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-md);
+    flex: 1;
+    min-width: 0;
     
     @media (max-width: 576px) {
       width: 100%;
+      flex-wrap: wrap;
     }
   }
 }
@@ -123,15 +188,21 @@
 .vehicle-name {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  max-width: 300px;
+  gap: var(--space-sm);
+  max-width: 100%;
+  min-width: 0;
   
-  @media (max-width: 768px) {
-    max-width: 200px;
-  }
-  
-  @media (max-width: 576px) {
-    max-width: 100%;
+  .icon-vehicle-add {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: var(--primary-600);
+    transition: all var(--transition-base);
+    
+    &:hover {
+      color: var(--primary-700);
+      transform: scale(1.1);
+    }
   }
   
   .vehicle-detail {
@@ -139,30 +210,58 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 600;
-    color: #2d3748;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
     text-decoration: none;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
     
     &:hover {
-      color: #667eea;
+      color: var(--primary-600);
+      background-color: var(--primary-50);
     }
+  }
+  
+  @media (max-width: 768px) {
+    max-width: 100%;
   }
 }
 
 .form-control {
+  min-width: 200px;
+  max-width: 100%;
+  
   @media (max-width: 576px) {
     width: 100%;
+    min-width: 100%;
   }
 }
 
 .left-expand-collapse,
 .right-expand-collapse {
   cursor: pointer;
-  padding: 0.5rem;
-  transition: all 0.3s ease;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
   
   &:hover {
-    transform: scale(1.1);
-    opacity: 0.7;
+    background-color: var(--primary-50);
+    border-color: var(--primary-300);
+    color: var(--primary-600);
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
   }
   
   @media (max-width: 992px) {
@@ -176,11 +275,19 @@
 }
 
 #articleContainer {
-  height: calc(100% - 48px);
+  height: calc(100% - 56px);
   overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-xl);
+  background: var(--bg-primary);
   
   @media (max-width: 768px) {
-    height: calc(100% - 44px);
+    height: calc(100% - 52px);
+    padding: var(--space-lg);
+  }
+  
+  @media (max-width: 576px) {
+    padding: var(--space-md);
   }
 }
 
@@ -200,7 +307,7 @@
 .icon-collapse-y-axis,
 .icon-expand-y-axis,
 .icon-caution {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   
   @media (max-width: 576px) {
     font-size: 1rem;
@@ -210,6 +317,23 @@
 // Bookmark message
 .bookmark-msg {
   font-size: 0.875rem;
+  color: var(--warning);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background-color: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  
+  a {
+    color: var(--warning);
+    font-weight: 600;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
   
   @media (max-width: 768px) {
     font-size: 0.75rem;
@@ -218,13 +342,15 @@
   @media (max-width: 576px) {
     width: 100%;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: var(--space-sm);
   }
 }
 
 // Copyright/license message
 .copyright {
   font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: var(--space-sm) var(--space-md);
   
   @media (max-width: 768px) {
     font-size: 0.75rem;
@@ -238,21 +364,36 @@
 // Select highlight
 .select-highlight {
   &.is-invalid {
-    border-color: #f56565;
-    background-color: #fff5f5;
+    border-color: var(--error);
+    background-color: rgba(239, 68, 68, 0.05);
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
   }
 }
 
 // Error message
 .no-article-error {
+  color: var(--error);
+  padding: var(--space-2xl);
+  text-align: center;
+  background-color: rgba(239, 68, 68, 0.05);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  
   @media (max-width: 576px) {
     font-size: 1rem;
-    margin: 1rem !important;
+    margin: var(--space-md) !important;
+    padding: var(--space-xl);
   }
 }
 
 // PDF viewer responsive
 ngx-extended-pdf-viewer {
+  width: 100%;
+  height: 100%;
+  
   @media (max-width: 768px) {
     ::ng-deep {
       #toolbarContainer {
@@ -283,26 +424,40 @@ ngx-extended-pdf-viewer {
   justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 2rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  
+  padding: var(--space-2xl);
+  background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
   .splash-image {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 10px 40px rgba(0, 0, 0, 0.1));
-    animation: fadeIn 0.6s ease;
+    filter: none;
+    animation: fadeIn 0.3s ease;
+    position: relative;
+    z-index: 1;
   }
 }
 
-@keyframes fadeIn {
+@keyframes fadeInScale {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.9);
   }
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
   }
 }
 
@@ -323,28 +478,37 @@ ngx-extended-pdf-viewer {
   #articleContainer {
     height: auto;
     overflow: visible;
+    padding: 0;
   }
 }
 
-// Dark mode support (optional)
+// Dark mode support
 @media (prefers-color-scheme: dark) {
+  :host {
+    background: linear-gradient(135deg, var(--neutral-900) 0%, var(--neutral-800) 100%);
+  }
+  
   #contentPanes {
-    background: #1a202c;
+    background: var(--neutral-900);
   }
   
   #leftPane,
   #rightPane,
   .top-control-container {
-    background: #2d3748;
-    border-color: #4a5568;
+    background: var(--neutral-800);
+    border-color: var(--neutral-700);
   }
   
   .vehicle-detail {
-    color: #e2e8f0;
+    color: var(--neutral-100);
     
     &:hover {
-      color: #a5b4fc;
+      color: var(--primary-400);
+      background-color: rgba(102, 126, 234, 0.2);
     }
   }
+  
+  .splash-container {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  }
 }
-

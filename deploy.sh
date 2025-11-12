@@ -41,9 +41,9 @@ fi
 # Deploy to Firebase
 echo "☁️  Deploying to Firebase..."
 if command -v firebase >/dev/null 2>&1; then
-	(cd motorproxy && firebase deploy --only hosting,functions)
+	firebase deploy --only hosting,functions
 elif command -v npx >/dev/null 2>&1; then
-	(cd motorproxy && npx firebase-tools deploy --only hosting,functions)
+	npx firebase-tools deploy --only hosting,functions
 else
 	echo "❌ Firebase CLI not found. Install it (npm i -g firebase-tools) or ensure npx is available."
 	exit 2

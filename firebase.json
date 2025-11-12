@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "dist/motor-m1-app",
+    "public": "motorproxy/dist/motor-m1-app",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -19,7 +19,7 @@
   },
   "functions": [
     {
-      "source": "functions",
+      "source": "motorproxy/functions",
       "codebase": "motorproxy",
       "ignore": [
         "node_modules",
@@ -31,3 +31,5 @@
     }
   ]
 }
+
+

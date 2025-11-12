@@ -1,75 +1,54 @@
-// Modern Banner Component
+// Minimal Banner - flattened, neutral
 
 :host {
   display: block;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
   position: relative;
-  z-index: 100;
+  z-index: 2;
 }
 
 ::ng-deep {
-  // Target the banner content
   & > div {
-    padding: 1rem 1.5rem;
-    
+    padding: var(--space-md) var(--space-xl);
+
     @media (max-width: 768px) {
-      padding: 0.75rem 1rem;
+      padding: var(--space-sm) var(--space-lg);
     }
-    
     @media (max-width: 576px) {
-      padding: 0.625rem 0.75rem;
+      padding: var(--space-sm);
     }
-    
-    // Style any headings in the banner
+
     h1, h2, h3, h4, h5, h6 {
-      color: white;
+      color: var(--text-primary);
       margin: 0;
       font-weight: 700;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      
-      @media (max-width: 768px) {
-        font-size: 1.25rem;
-      }
-      
-      @media (max-width: 576px) {
-        font-size: 1.1rem;
-      }
+      letter-spacing: -0.01em;
     }
-    
-    // Style any images in the banner
-    img {
-      max-height: 40px;
-      vertical-align: middle;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-      
-      @media (max-width: 576px) {
-        max-height: 32px;
-      }
+
+    // Hide the specific asset image if present inside the banner
+    img[src*=\"/api/asset/a99274b9-6d81-419f-8f14-d5b913cd1a56\"] {
+      display: none !important;
     }
-    
-    // Style any links
+
     a {
-      color: white;
+      color: var(--primary-700);
       text-decoration: underline;
-      
       &:hover {
-        color: rgba(255, 255, 255, 0.9);
+        color: var(--primary-800);
       }
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin: var(--space-xs) 0 0 0;
     }
   }
 }
 
-// Dark gradient overlay for visual depth
-::ng-deep > div::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-  pointer-events: none;
+@media print {
+  :host {
+    display: none;
+  }
 }
-
