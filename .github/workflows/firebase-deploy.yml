@@ -1,0 +1,31 @@
+name: Firebase Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Make deploy script executable
+        run: chmod +x deploy.sh
+      
+      - name: Run Firebase deployment
+        run: ./deploy.sh
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
