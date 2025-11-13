@@ -87,6 +87,32 @@ Automatic authentication using Playwright:
 - Auto-reauthentication on expiration
 - No client credentials exposed
 
+## 🤖 CI/CD - GitHub Actions
+
+The repository includes a GitHub Actions workflow (`.github/workflows/self-hosted-ci.yml`) that automatically deploys to Firebase when code is pushed to the `main` branch.
+
+### Setting up Firebase Token for GitHub Actions
+
+To enable automatic Firebase deployment in GitHub Actions:
+
+1. **Generate a Firebase CI token:**
+   ```bash
+   firebase login:ci
+   ```
+   This will open a browser for authentication and generate a token.
+
+2. **Add the token to GitHub Secrets:**
+   - Go to your repository on GitHub
+   - Navigate to **Settings** → **Secrets and variables** → **Actions**
+   - Click **New repository secret**
+   - Name: `FIREBASE_TOKEN`
+   - Value: Paste the token from step 1
+   - Click **Add secret**
+
+3. **The workflow will now automatically deploy to Firebase** when you push to `main`.
+
+**Note:** The deploy script (`deploy.sh`) supports both authenticated (with token) and interactive (without token) modes, so you can still deploy manually without the token.
+
 ## 📝 Scripts
 
 ### Frontend (`cd vehicleapi/frontend`)

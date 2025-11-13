@@ -128,16 +128,23 @@ jobs:
       
       - name: Deploy notification
         run: |
-          echo "Deploying cruis-api to self-hosted environment"
+          echo "Deploying cruis-api to Firebase"
           echo "Commit: ${{ github.sha }}"
           echo "Branch: ${{ github.ref_name }}"
           echo "Author: ${{ github.actor }}"
       
-      - name: Restart application
+      - name: Deploy to Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
-          # Add your deployment commands here
-          # For example:
-          # pm2 restart cruis-api || pm2 start index.js --name cruis-api
-          # Or use systemctl if running as a service:
-          # sudo systemctl restart cruis-api
-          echo "Application deployment completed"
+          if [ -z "$FIREBASE_TOKEN" ]; then
+            echo "⚠️  FIREBASE_TOKEN not set. Skipping Firebase deployment."
+            echo "To enable Firebase deployment, add FIREBASE_TOKEN to GitHub secrets."
+            echo "Generate token with: firebase login:ci"
+            exit 0
+          fi
+          
+          echo "🚀 Deploying to Firebase..."
+          chmod +x ./deploy.sh
+          ./deploy.sh
+          echo "✅ Firebase deployment completed"
