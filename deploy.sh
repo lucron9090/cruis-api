@@ -40,16 +40,32 @@ fi
 
 # Deploy to Firebase
 echo "☁️  Deploying to Firebase..."
+
+# Determine authentication method
+AUTH_METHOD=""
+if [ -n "${FIREBASE_TOKEN:-}" ]; then
+	AUTH_METHOD="token"
+	echo "   Using CI token authentication"
+elif [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]; then
+	AUTH_METHOD="service_account"
+	echo "   Using service account authentication"
+else
+	AUTH_METHOD="interactive"
+	echo "   Using interactive authentication"
+fi
+
 if command -v firebase >/dev/null 2>&1; then
-	if [ -n "${FIREBASE_TOKEN:-}" ]; then
+	if [ "$AUTH_METHOD" = "token" ]; then
 		firebase deploy --only hosting,functions --token "$FIREBASE_TOKEN"
 	else
+		# GOOGLE_APPLICATION_CREDENTIALS is automatically used by Firebase CLI
 		firebase deploy --only hosting,functions
 	fi
 elif command -v npx >/dev/null 2>&1; then
-	if [ -n "${FIREBASE_TOKEN:-}" ]; then
+	if [ "$AUTH_METHOD" = "token" ]; then
 		npx firebase-tools deploy --only hosting,functions --token "$FIREBASE_TOKEN"
 	else
+		# GOOGLE_APPLICATION_CREDENTIALS is automatically used by Firebase CLI
 		npx firebase-tools deploy --only hosting,functions
 	fi
 else

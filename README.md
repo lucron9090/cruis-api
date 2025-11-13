@@ -91,9 +91,30 @@ Automatic authentication using Playwright:
 
 The repository includes a GitHub Actions workflow (`.github/workflows/self-hosted-ci.yml`) that automatically deploys to Firebase when code is pushed to the `main` branch.
 
-### Setting up Firebase Token for GitHub Actions
+### Setting up Firebase Authentication for GitHub Actions
 
-To enable automatic Firebase deployment in GitHub Actions:
+To enable automatic Firebase deployment in GitHub Actions, you can use **either** of these methods:
+
+#### Method 1: Firebase Service Account (Recommended - No CLI Required)
+
+1. **Get your Firebase service account JSON:**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Select your project (`studio-534897447-7a1e7`)
+   - Navigate to **Project Settings** → **Service Accounts**
+   - Click **Generate New Private Key**
+   - Download the JSON file
+
+2. **Add the service account to GitHub Secrets:**
+   - Go to your repository on GitHub
+   - Navigate to **Settings** → **Secrets and variables** → **Actions**
+   - Click **New repository secret**
+   - Name: `FIREBASE_SERVICE_ACCOUNT`
+   - Value: Paste the entire JSON content from the downloaded file
+   - Click **Add secret**
+
+3. **The workflow will now automatically deploy to Firebase** when you push to `main`.
+
+#### Method 2: Firebase CI Token (Alternative - Requires Firebase CLI)
 
 1. **Generate a Firebase CI token:**
    ```bash
@@ -111,7 +132,10 @@ To enable automatic Firebase deployment in GitHub Actions:
 
 3. **The workflow will now automatically deploy to Firebase** when you push to `main`.
 
-**Note:** The deploy script (`deploy.sh`) supports both authenticated (with token) and interactive (without token) modes, so you can still deploy manually without the token.
+**Note:** The deploy script supports multiple authentication modes:
+- Service account JSON (via `GOOGLE_APPLICATION_CREDENTIALS`)
+- CI token (via `FIREBASE_TOKEN`)
+- Interactive mode (for manual deployment)
 
 ## 📝 Scripts
 
