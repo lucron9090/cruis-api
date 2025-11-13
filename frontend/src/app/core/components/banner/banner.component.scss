@@ -27,8 +27,8 @@
       letter-spacing: -0.01em;
     }
 
-    // Hide the specific asset image if present inside the banner
-    img[src*=\"/api/asset/a99274b9-6d81-419f-8f14-d5b913cd1a56\"] {
+    /* Hide the specific asset image if present inside the banner */
+    img[src*='/api/asset/a99274b9-6d81-419f-8f14-d5b913cd1a56'] {
       display: none !important;
     }
 
