@@ -8,27 +8,60 @@ export class HrefRoutingDirective {
   constructor(private router: Router) {}
 
   @HostListener('click', ['$event'])
-  onClick(event: MouseEvent) {
+  onClick(event: MouseEvent): void {
+    // Find the closest anchor element
     let target = event.target as Element | null;
     let href = target?.getAttribute('href');
-    while (!href && target) {
-      // Do not use parentElement, it is undefined for SVG elements in Internet Explorer
+    let attempts = 0;
+    const maxAttempts = 10; // Prevent infinite loops
+    
+    while (!href && target && attempts < maxAttempts) {
+      // Traverse up the DOM tree to find an anchor with href
       target = this.isElement(target.parentNode) ? target.parentNode : null;
       href = target?.getAttribute('href');
+      attempts++;
     }
-    const queryParamsAttribute = target?.getAttribute('merge-query-params');
-    if (href) {
+    
+    if (!href || !target) {
+      return; // No href found, let default behavior proceed
+    }
+    
+    // Handle special cases
+    if (href === '#' || href === 'javascript:void(0)' || href === 'javascript:;') {
       event.preventDefault();
-      if (queryParamsAttribute) {
+      return;
+    }
+    
+    // Check for external links
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//')) {
+      // Allow external links to proceed normally
+      return;
+    }
+    
+    // Prevent default for all internal navigation
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const queryParamsAttribute = target.getAttribute('merge-query-params');
+    
+    if (queryParamsAttribute) {
+      try {
         const queryParams = JSON.parse(queryParamsAttribute) as { [key: string]: string };
         this.router.navigate([], { queryParams, queryParamsHandling: 'merge' });
-      } else if (href !== '#') {
+      } catch (error) {
+        console.error('Failed to parse merge-query-params:', queryParamsAttribute, error);
+        // Fallback to simple navigation
         this.router.navigateByUrl(href);
       }
+    } else {
+      // Simple internal navigation
+      this.router.navigateByUrl(href).catch(err => {
+        console.error('Navigation failed:', href, err);
+      });
     }
   }
 
-  isElement(obj: any): obj is Element {
+  private isElement(obj: any): obj is Element {
     return Boolean((obj as Element | null)?.getAttribute);
   }
 }
