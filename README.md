@@ -1,6 +1,11 @@
-# Motor M1 Project
+# 🚗 Motor M1 Vehicle Information System
 
-Monorepo structure for Motor.com M1 application with separate frontend and backend.
+[![Deploy to Firebase](https://github.com/lucron9090/cruis-api/actions/workflows/deploy-firebase.yml/badge.svg)](https://github.com/lucron9090/cruis-api/actions/workflows/deploy-firebase.yml)
+[![CI Build](https://github.com/lucron9090/cruis-api/actions/workflows/ci.yml/badge.svg)](https://github.com/lucron9090/cruis-api/actions/workflows/ci.yml)
+
+Modern, responsive vehicle service and maintenance information system powered by Angular and Firebase.
+
+**🌐 Live Application:** [https://studio-534897447-7a1e7.web.app](https://studio-534897447-7a1e7.web.app)
 
 ## 📁 Project Structure
 
@@ -87,9 +92,23 @@ Automatic authentication using Playwright:
 - Auto-reauthentication on expiration
 - No client credentials exposed
 
-## 🤖 CI/CD - GitHub Actions
+## 🤖 CI/CD - Automated Deployment
 
-The repository includes a GitHub Actions workflow (`.github/workflows/self-hosted-ci.yml`) that automatically deploys to Firebase when code is pushed to the `main` branch.
+### GitHub Actions Workflows
+
+This repository includes three automated workflows:
+
+1. **🚀 Deploy to Firebase** (`.github/workflows/deploy-firebase.yml`)
+   - **Trigger:** Push to `main` or manual
+   - **Actions:** Build Angular → Deploy to Firebase Hosting
+   
+2. **🔍 CI Build** (`.github/workflows/ci.yml`) 
+   - **Trigger:** All PRs and pushes
+   - **Actions:** Build validation + artifact upload
+   
+3. **👀 PR Preview** (`.github/workflows/pr-preview.yml`)
+   - **Trigger:** Pull requests
+   - **Actions:** Deploy to preview channel
 
 ### Setting up Firebase Authentication for GitHub Actions
 

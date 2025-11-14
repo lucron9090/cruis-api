@@ -1,0 +1,51 @@
+name: CI - Build & Test
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci --legacy-peer-deps
+      
+      - name: Build application
+        working-directory: ./frontend
+        run: npm run build --if-present
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+      
+      - name: Check build artifacts
+        run: |
+          if [ ! -d "frontend/dist/motor-m1-app" ]; then
+            echo "❌ Build output not found"
+            exit 1
+          fi
+          echo "✅ Build successful"
+          ls -lah frontend/dist/motor-m1-app/
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: frontend/dist/motor-m1-app/
+          retention-days: 7
+
