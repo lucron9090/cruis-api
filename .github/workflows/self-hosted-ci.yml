@@ -128,16 +128,44 @@ jobs:
       
       - name: Deploy notification
         run: |
-          echo "Deploying cruis-api to self-hosted environment"
+          echo "Deploying cruis-api to Firebase"
           echo "Commit: ${{ github.sha }}"
           echo "Branch: ${{ github.ref_name }}"
           echo "Author: ${{ github.actor }}"
       
-      - name: Restart application
+      - name: Deploy to Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          # Add your deployment commands here
-          # For example:
-          # pm2 restart cruis-api || pm2 start index.js --name cruis-api
-          # Or use systemctl if running as a service:
-          # sudo systemctl restart cruis-api
-          echo "Application deployment completed"
+          # Check if either FIREBASE_TOKEN or service account is available
+          if [ -z "$FIREBASE_TOKEN" ] && [ -z "$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then
+            echo "⚠️  Neither FIREBASE_TOKEN nor FIREBASE_SERVICE_ACCOUNT is set."
+            echo "Skipping Firebase deployment."
+            echo ""
+            echo "To enable Firebase deployment, add one of these to GitHub secrets:"
+            echo "  1. FIREBASE_TOKEN - Generate with: firebase login:ci"
+            echo "  2. FIREBASE_SERVICE_ACCOUNT - Your Firebase service account JSON"
+            exit 0
+          fi
+          
+          echo "🚀 Deploying to Firebase..."
+          
+          # If service account JSON is provided, create credentials file
+          if [ -n "$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then
+            echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/firebase-service-account.json
+            export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-service-account.json
+            echo "✓ Using Firebase service account for authentication"
+          else
+            echo "✓ Using Firebase CI token for authentication"
+          fi
+          
+          chmod +x ./deploy.sh
+          ./deploy.sh
+          
+          # Clean up credentials file if created
+          if [ -f /tmp/firebase-service-account.json ]; then
+            rm -f /tmp/firebase-service-account.json
+          fi
+          
+          echo "✅ Firebase deployment completed"
