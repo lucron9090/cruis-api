@@ -1,4 +1,4 @@
-<!-- Motor M1 Application - Main Layout Component -->
+<!-- YourCar Application - Main Layout Component -->
 <!-- Mobile-First, Accessible, Performant -->
 
 <div class="app-layout" 
@@ -28,11 +28,11 @@
       <div class="brand">
         <img 
           src="assets/MOTOR_Plain_blue-logo.svg" 
-          alt="Motor M1 Logo" 
+          alt="YourCar Logo" 
           class="logo"
           width="40"
           height="40" />
-        <span class="brand-name">Motor M1</span>
+        <span class="brand-name">YourCar</span>
       </div>
 
       <!-- Search Bar (Desktop) -->
@@ -173,12 +173,12 @@
         </ng-container>
         
         <ng-template #defaultSplash>
-          <div class="splash-screen">
-            <img 
-              [src]="userSettingsService.splashUrl$ | async" 
-              alt="Motor M1 Welcome Screen" 
-              class="splash-image"
-              loading="lazy" />
+              <div class="splash-screen">
+                <img 
+                  [src]="userSettingsService.splashUrl$ | async" 
+                  alt="YourCar Welcome Screen" 
+                  class="splash-image"
+                  loading="lazy" />
           </div>
         </ng-template>
       </ng-template>
@@ -297,9 +297,11 @@
             </mtr-dynamic-article-html-iframe>
 
             <!-- PDF Viewer -->
-            <ngx-extended-pdf-viewer
+          <ngx-extended-pdf-viewer
+            class="pdf-viewer"
               *ngIf="assetsFacade.base64Pdf$ | async"
               [base64Src]="(assetsFacade.base64Pdf$ | async)!"
+            height="100%"
               [useBrowserLocale]="true"
               [showDownloadButton]="detectMobile()"
               [showOpenFileButton]="false"
@@ -382,11 +384,11 @@
     <div class="drawer-header">
       <img 
         src="assets/MOTOR_Plain_blue-logo.svg" 
-        alt="Motor M1 Logo" 
+        alt="YourCar Logo" 
         class="logo"
         width="32"
         height="32" />
-      <h2 class="drawer-title">Motor M1</h2>
+      <h2 class="drawer-title">YourCar</h2>
       <button 
         class="btn btn-icon btn-ghost"
         (click)="closeMobileMenu()"

@@ -57,7 +57,7 @@ export class VehicleDashboardComponent {
             make,
             model,
             vin: vin || undefined,
-            contentSource: contentSource === ContentSource.Motor ? 'Motor' : contentSource
+            contentSource: contentSource === ContentSource.Motor ? 'YourCar' : contentSource
           } as VehicleInfo;
         }),
         catchError(error => {
@@ -69,7 +69,7 @@ export class VehicleDashboardComponent {
             make: undefined,
             model: 'Please select a vehicle',
             vin: vin || undefined,
-            contentSource: contentSource === ContentSource.Motor ? 'Motor' : contentSource
+            contentSource: contentSource === ContentSource.Motor ? 'YourCar' : contentSource
           } as VehicleInfo);
         })
       )

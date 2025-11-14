@@ -3,7 +3,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-echo "🚀 Deploying Motor M1 to Firebase..."
+echo "🚀 Deploying YourCar to Firebase..."
 
 cleanup() {
 	rc=$?

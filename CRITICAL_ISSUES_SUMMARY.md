@@ -1,4 +1,4 @@
-# Motor M1 Application - Critical Issues Summary
+# YourCar M1 Application - Critical Issues Summary
 
 **Date:** November 14, 2025  
 **Audited Site:** https://studio-534897447-7a1e7.web.app

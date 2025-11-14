@@ -1,4 +1,4 @@
-/* Motor M1 Application - Layout Component */
+/* YourCar Application - Layout Component */
 /* Mobile-First, Accessible, High-Performance */
 
 // Note: Design system tokens are imported globally in angular.json
@@ -32,9 +32,10 @@
 .app-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   background-color: var(--color-bg-primary);
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 /* ============================================
@@ -185,9 +186,10 @@
 
 .app-content {
   display: flex;
-  flex: 1;
-  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
   position: relative;
+  overflow: visible;
 }
 
 /* ============================================
@@ -331,12 +333,11 @@
    ============================================ */
 
 .app-main {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;
   background-color: var(--color-bg-primary);
   position: relative;
-  -webkit-overflow-scrolling: touch;
 
   &:focus {
     outline: none;
@@ -381,7 +382,8 @@
 .article-area {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* Article Toolbar */
@@ -471,9 +473,12 @@
 
 /* Article Content */
 .article-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  overflow: visible;
   padding: var(--space-6);
   background-color: var(--color-bg-primary);
 
@@ -487,6 +492,15 @@
     margin: 0 auto;
     width: 100%;
   }
+}
+
+.article-content .pdf-viewer {
+  width: 100%;
+  min-height: 70vh;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 /* Loading State */

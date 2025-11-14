@@ -1,4 +1,4 @@
-# Motor M1 Application - Complete UI/UX Audit & Rewrite Plan
+# YourCar M1 Application - Complete UI/UX Audit & Rewrite Plan
 
 **Date:** November 14, 2025  
 **Audited Site:** https://studio-534897447-7a1e7.web.app  
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The current Motor M1 Application has **critical UI/UX issues** that severely impact usability, especially on mobile devices. This audit identifies 47 specific problems across layout, navigation, responsiveness, accessibility, and visual design. A complete ground-up rewrite is **strongly recommended**.
+The current YourCar M1 Application has **critical UI/UX issues** that severely impact usability, especially on mobile devices. This audit identifies 47 specific problems across layout, navigation, responsiveness, accessibility, and visual design. A complete ground-up rewrite is **strongly recommended**.
 
 ---
 
@@ -844,7 +844,7 @@ if (featureFlags.newHeader) {
 4. **Multi-language** - i18n support
 5. **Personalization** - Show relevant content based on usage
 6. **Smart search** - NLP, semantic search
-7. **Voice search** - "Hey Motor, find brake pad replacement"
+7. **Voice search** - "Hey YourCar, find brake pad replacement"
 8. **AR mode** - Point phone at engine, see labeled parts
 9. **Collaboration** - Share notes, annotations with team
 10. **AI assistant** - Chat interface for troubleshooting
@@ -879,7 +879,7 @@ if (featureFlags.newHeader) {
 
 ## 🎬 Conclusion
 
-The current Motor M1 Application has **significant UI/UX issues** that impact usability, especially on mobile devices. A **complete rewrite** is recommended, following modern best practices:
+The current YourCar M1 Application has **significant UI/UX issues** that impact usability, especially on mobile devices. A **complete rewrite** is recommended, following modern best practices:
 
 1. **Mobile-First Design** - Optimize for small screens first
 2. **Design System** - Consistent, reusable components

@@ -1,4 +1,4 @@
-# 🚗 Motor M1 Vehicle Information System
+# 🚗 YourCar M1 Vehicle Information System
 
 [![Deploy to Firebase](https://github.com/lucron9090/cruis-api/actions/workflows/deploy-firebase.yml/badge.svg)](https://github.com/lucron9090/cruis-api/actions/workflows/deploy-firebase.yml)
 [![CI Build](https://github.com/lucron9090/cruis-api/actions/workflows/ci.yml/badge.svg)](https://github.com/lucron9090/cruis-api/actions/workflows/ci.yml)
@@ -47,7 +47,7 @@ Firebase Function (motorproxy)
     ↓
 Playwright Authentication (card: 1001600244772)
     ↓
-Motor.com M1 API (sites.motor.com/m1)
+YourCar.com M1 API (sites.motor.com/m1)
 ```
 
 ## 🔧 Development
