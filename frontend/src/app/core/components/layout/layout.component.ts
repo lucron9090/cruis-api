@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
 import { combineLatest, merge, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, first, map, switchMap, tap } from 'rxjs/operators';
 import { AssetsFacade } from '~/assets/state/assets.facade';
@@ -16,7 +16,7 @@ import { VehicleSelectionFacade } from '~/vehicle-selection/state/state/vehicle-
   styleUrls: ['./layout.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit {
   constructor(
     public assetsFacade: AssetsFacade,
     public layoutFacade: LayoutFacade,
@@ -24,9 +24,13 @@ export class LayoutComponent {
     public vehicleSelectionFacade: VehicleSelectionFacade,
     public userSettingsService: UserSettingsService
   ) {}
+  
+  // Component State
   IsAwaitingApiResponse: boolean = false;
   isMobileMenuOpen: boolean = false;
   isSidebarOpen: boolean = true;
+  isMobileSearchOpen: boolean = false;
+  showBackToTop: boolean = false;
   /** Create a new search results panel when the selected filter or search term changes to reset scroll positions and bucket expanded states. */
   searchPanelRecreationTrigger$ = merge(this.searchResultsFacade.selectedFilter$, this.searchResultsFacade.searchTerm$);
 
@@ -170,6 +174,64 @@ export class LayoutComponent {
     if (searchInput) {
       searchInput.focus();
       searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+  
+  ngOnInit() {
+    // Set initial sidebar state based on screen width
+    if (typeof window !== 'undefined') {
+      this.isSidebarOpen = window.innerWidth >= 1024;
+    }
+  }
+  
+  toggleMobileSearch() {
+    this.isMobileSearchOpen = !this.isMobileSearchOpen;
+    if (this.isMobileSearchOpen) {
+      // Focus search input after animation
+      setTimeout(() => {
+        const searchInput = document.querySelector<HTMLInputElement>('.mobile-search-bar input');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }, 300);
+    }
+  }
+  
+  scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  
+  @HostListener('window:scroll', ['$event'])
+  onScroll() {
+    // Show back-to-top button after scrolling 300px
+    this.showBackToTop = window.pageYOffset > 300;
+  }
+  
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    // Auto-adjust sidebar on resize
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 1024;
+      if (!isMobile && !this.isSidebarOpen) {
+        this.isSidebarOpen = true;
+      }
+      // Close mobile menu on desktop
+      if (!isMobile && this.isMobileMenuOpen) {
+        this.closeMobileMenu();
+      }
+    }
+  }
+  
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent) {
+    // Close mobile menu and search on Escape
+    if (this.isMobileMenuOpen) {
+      this.closeMobileMenu();
+      event.preventDefault();
+    }
+    if (this.isMobileSearchOpen) {
+      this.isMobileSearchOpen = false;
+      event.preventDefault();
     }
   }
 }

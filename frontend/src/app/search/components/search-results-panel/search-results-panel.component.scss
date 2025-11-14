@@ -1,10 +1,13 @@
-// Modern Search Results Panel with Tree Navigation
+/* Motor M1 Application - Search Results Panel (Tree Navigation) */
+/* Modern, Accessible, Keyboard-Friendly */
+
+@import '../../../styles.scss';
 
 :host {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #ffffff;
+  background-color: var(--color-surface);
   overflow: hidden;
 }
 
@@ -12,60 +15,62 @@
 :host,
 .h-100 {
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
   
   &::-webkit-scrollbar-track {
-    background: #f7fafc;
-    border-radius: 4px;
+    background: transparent;
   }
   
   &::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-    border-radius: 4px;
+    background-color: var(--color-border-hover);
+    border-radius: var(--radius-full);
     
     &:hover {
-      background: linear-gradient(180deg, #5568d3 0%, #63408a 100%);
+      background-color: var(--color-primary);
     }
   }
 }
 
 // Main navigation container
 .nav {
-  padding: 0;
+  padding: var(--space-2);
   margin: 0;
   list-style: none;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 // Empty state styling
 .mx-4.text-center {
-  padding: 3rem 2rem;
-  color: #718096;
+  padding: var(--space-12) var(--space-8);
+  color: var(--color-text-secondary);
+  text-align: center;
   
   img {
     max-width: 200px;
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     opacity: 0.7;
   }
   
   h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #2d3748;
-    line-height: 1.6;
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    line-height: var(--leading-relaxed);
   }
   
   @media (max-width: 576px) {
-    padding: 2rem 1rem;
+    padding: var(--space-8) var(--space-4);
     
     img {
       max-width: 150px;
     }
     
     h3 {
-      font-size: 0.95rem;
+      font-size: var(--text-base);
     }
   }
 }
@@ -74,23 +79,29 @@
 .bucket-header {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0.75rem;
-  margin: 0.125rem 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #2d3748;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3);
+  margin: var(--space-1) 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 6px;
+  transition: all var(--transition-fast);
+  border-radius: var(--radius-md);
   user-select: none;
   position: relative;
+  min-height: var(--touch-target-min);
   
   &::before {
-    content: '▶';
-    margin-right: 0.5rem;
-    font-size: 0.7rem;
-    transition: transform 0.2s ease;
-    color: #667eea;
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid var(--color-primary);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    transition: transform var(--transition-fast);
+    flex-shrink: 0;
   }
   
   &:not(.collapsed)::before {

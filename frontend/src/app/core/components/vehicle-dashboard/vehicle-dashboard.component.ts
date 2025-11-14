@@ -77,23 +77,41 @@ export class VehicleDashboardComponent {
     distinctUntilChanged()
   );
 
-  // KPI counts for each filter tab (e.g., Procedures, Diagrams, etc.)
-  kpiCounts$ = this.searchResultsFacade.filterTabCounts$;
-
-  // Recent items from current results (best-effort). We show the first few entries.
-  recentArticles$ = this.searchResultsFacade.all$.pipe(
-    map((articles) => (articles ?? []).slice(0, 6))
+  // Recent documents (mock data for now - can be enhanced with real tracking)
+  recentDocuments$: Observable<Array<{title: string; category: string; route: string[]; queryParams: any}>> = this.vehicleInfo$.pipe(
+    map(() => {
+      // TODO: Implement real recent documents tracking with localStorage
+      // For now, return empty array
+      return [];
+    })
   );
 
-  // Bookmark support (continue reading). Produces query params needed by backend (needs root article id present).
-  bookmarkParams$ = combineLatest([
-    this.assetsFacade.bookmarkId$,
-    this.assetsFacade.rootId$,
-  ]).pipe(
-    map(([bookmarkId, rootId]) => {
-      if (!bookmarkId) return undefined;
-      // Prefer an existing rootId in the URL; if absent, link will still include bookmarkId and rely on current route state.
-      return rootId ? { bookmarkId, articleIdTrail: rootId } : { bookmarkId };
+  // Popular articles (mock data for now - can be enhanced with analytics)
+  popularArticles$: Observable<Array<{title: string; category: string; route: string[]; queryParams: any}>> = this.vehicleInfo$.pipe(
+    map((vehicle) => {
+      if (!vehicle) return [];
+      
+      // Mock popular articles - can be replaced with real analytics data
+      return [
+        {
+          title: 'Engine Oil and Filter Replacement',
+          category: 'Maintenance Procedures',
+          route: ['/docs/Procedures'],
+          queryParams: {}
+        },
+        {
+          title: 'Brake Pad and Rotor Replacement',
+          category: 'Brake Service',
+          route: ['/docs/Procedures'],
+          queryParams: {}
+        },
+        {
+          title: 'Tire Rotation and Inspection',
+          category: 'Maintenance Procedures',
+          route: ['/docs/Procedures'],
+          queryParams: {}
+        }
+      ];
     })
   );
 }
