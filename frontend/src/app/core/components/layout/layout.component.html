@@ -12,44 +12,35 @@
   <!-- Main Header -->
   <header class="app-header" role="banner">
     <div class="header-container">
-      <!-- Mobile Menu Toggle -->
-      <button 
-        class="btn btn-icon btn-ghost mobile-menu-toggle"
-        (click)="toggleMobileMenu()"
-        aria-label="Toggle mobile menu"
-        [attr.aria-expanded]="isMobileMenuOpen"
-        type="button">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-
-      <!-- Logo & Brand -->
-      <div class="brand">
-        <img 
-          src="assets/MOTOR_Plain_blue-logo.svg" 
-          alt="YourCar Logo" 
-          class="logo"
-          width="40"
-          height="40" />
-        <span class="brand-name">YourCar</span>
+      <div class="header-left">
+        <button 
+          class="btn btn-icon btn-ghost header-menu-toggle"
+          (click)="toggleMobileMenu()"
+          aria-label="Toggle menu"
+          [attr.aria-expanded]="isMobileMenuOpen"
+          type="button">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="brand-badge" aria-hidden="true">YC</div>
+        <div class="brand-copy">
+          <span class="brand-title">YourCar</span>
+          <span class="brand-subtitle">Application</span>
+        </div>
       </div>
 
-      <!-- Search Bar (Desktop) -->
-      <div class="search-bar-desktop">
+      <div class="header-search">
         <mtr-search-form 
-          *ngIf="vehicleSelectionFacade.activeVehicleId$ | async"
-          [class.v-hidden]="!(vehicleSelectionFacade.activeVehicleId$ | async)">
+          *ngIf="vehicleSelectionFacade.activeVehicleId$ | async">
         </mtr-search-form>
       </div>
 
-      <!-- Header Actions -->
       <div class="header-actions">
-        <!-- Search Toggle (Mobile) -->
         <button 
-          class="btn btn-icon btn-ghost search-toggle-mobile"
+          class="btn btn-icon btn-ghost header-search-toggle"
           (click)="toggleMobileSearch()"
-          aria-label="Toggle search"
+          aria-label="Toggle search drawer"
           type="button">
           <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -57,7 +48,6 @@
           </svg>
         </button>
 
-        <!-- User Menu (if enabled) -->
         <mtr-nav-header 
           *ngIf="(userSettingsService.hamburgerMenuMode$ | async) === 'Enabled'"
           class="user-menu">
@@ -65,11 +55,22 @@
       </div>
     </div>
 
-    <!-- Mobile Search Bar (Expandable) -->
+    <!-- Mobile Search Sheet -->
     <div class="mobile-search-bar" [class.expanded]="isMobileSearchOpen">
-      <mtr-search-form 
-        *ngIf="vehicleSelectionFacade.activeVehicleId$ | async">
-      </mtr-search-form>
+      <div class="mobile-search-inner">
+        <mtr-search-form 
+          *ngIf="vehicleSelectionFacade.activeVehicleId$ | async">
+        </mtr-search-form>
+        <button 
+          class="btn btn-icon btn-ghost close-mobile-search"
+          (click)="toggleMobileSearch()"
+          aria-label="Close search"
+          type="button">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Filter Tabs (Below Header) -->
@@ -382,13 +383,11 @@
     aria-label="Mobile menu">
     
     <div class="drawer-header">
-      <img 
-        src="assets/MOTOR_Plain_blue-logo.svg" 
-        alt="YourCar Logo" 
-        class="logo"
-        width="32"
-        height="32" />
-      <h2 class="drawer-title">YourCar</h2>
+      <div class="brand-badge" aria-hidden="true">YC</div>
+      <div class="brand-copy">
+        <h2 class="drawer-title">YourCar</h2>
+        <span class="drawer-subtitle">Application</span>
+      </div>
       <button 
         class="btn btn-icon btn-ghost"
         (click)="closeMobileMenu()"
