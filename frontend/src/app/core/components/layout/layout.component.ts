@@ -25,6 +25,8 @@ export class LayoutComponent {
     public userSettingsService: UserSettingsService
   ) {}
   IsAwaitingApiResponse: boolean = false;
+  isMobileMenuOpen: boolean = false;
+  isSidebarOpen: boolean = true;
   /** Create a new search results panel when the selected filter or search term changes to reset scroll positions and bucket expanded states. */
   searchPanelRecreationTrigger$ = merge(this.searchResultsFacade.selectedFilter$, this.searchResultsFacade.searchTerm$);
 
@@ -141,5 +143,33 @@ export class LayoutComponent {
   
   detectMobile(){
     return detectMobile();
+  }
+  
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    // Prevent body scroll when menu is open
+    if (this.isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+  
+  closeMobileMenu() {
+    this.isMobileMenuOpen = false;
+    document.body.style.overflow = '';
+  }
+  
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+  
+  openSearch() {
+    // Focus on search input
+    const searchInput = document.querySelector<HTMLInputElement>('#searchBox');
+    if (searchInput) {
+      searchInput.focus();
+      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 }
