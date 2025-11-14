@@ -93,7 +93,7 @@
 // Main Content
 .main-content {
   flex: 1;
-  padding: 3rem 0;
+  padding: 2rem 0;
   position: relative;
   z-index: 1;
 
@@ -107,7 +107,7 @@
 .content-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  gap: 2rem;
   align-items: start;
 
   @media (max-width: 992px) {
@@ -122,7 +122,7 @@
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    padding: 3rem;
+    padding: 2rem;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 
@@ -138,8 +138,8 @@
   }
 
   .welcome-icon {
-    width: 200px;
-    height: 200px;
+    width: 160px;
+    height: 160px;
     filter: drop-shadow(0 10px 20px rgba(33, 150, 243, 0.3));
     animation: float 6s ease-in-out infinite;
   }
@@ -201,7 +201,7 @@
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    padding: 2.5rem;
+    padding: 2rem;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 
@@ -302,7 +302,7 @@
 .divider {
   display: flex;
   align-items: center;
-  margin: 2rem 0 1.5rem;
+  margin: 1.5rem 0 1rem;
 
   &::before,
   &::after {
@@ -325,20 +325,20 @@
 .vin-search-card {
   background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-lighter) 100%);
   border-radius: 15px;
-  padding: 1.5rem;
+  padding: 1.25rem;
 }
 
 .vin-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
 }
 
 .vin-subtitle {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .vin-input-group {
