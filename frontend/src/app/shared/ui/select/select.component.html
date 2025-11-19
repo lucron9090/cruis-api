@@ -1,0 +1,25 @@
+<div class="form-group">
+    <label *ngIf="label" [for]="id" class="form-label">{{ label }}</label>
+
+    <div class="select-wrapper">
+        <select [id]="id" [value]="value" [disabled]="disabled" [class.is-invalid]="!!error"
+            (change)="onSelectChange($event)" (blur)="onTouch()" class="form-control form-select">
+            <option value="" disabled selected>{{ placeholder }}</option>
+            <option *ngFor="let option of options" [value]="option.value">
+                {{ option.label }}
+            </option>
+        </select>
+
+        <div class="select-arrow">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd" />
+            </svg>
+        </div>
+    </div>
+
+    <div *ngIf="error" class="form-error">
+        {{ error }}
+    </div>
+</div>

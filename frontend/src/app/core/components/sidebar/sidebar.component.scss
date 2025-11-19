@@ -1,0 +1,60 @@
+@import 'styles/variables';
+
+.app-sidebar {
+    position: fixed;
+    top: 64px; // Header height
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    background-color: var(--neutral-0);
+    border-right: 1px solid var(--neutral-200);
+    z-index: var(--z-fixed);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+
+    &.open {
+        transform: translateX(0);
+    }
+
+    @media (min-width: 1024px) {
+        transform: translateX(0); // Always visible on desktop
+        width: 280px;
+
+        // &.open {
+        //     // On desktop, open state might mean something else or just default
+        // }
+    }
+}
+
+.sidebar-header {
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--neutral-100);
+}
+
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-2);
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: var(--z-modal-backdrop);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+
+    &.open {
+        @media (max-width: 1023px) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+}

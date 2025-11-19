@@ -898,8 +898,6 @@ For issues or questions:
 
 ---
 
-**Last Updated:** November 2025  
+**Last Updated:** January 2024  
 **API Version:** 1.0.0
-
-**Note:** All response examples in this documentation are based on real API responses tested on 2025-11-19. Response structures include a `header` object with metadata and a `body` object/array containing the actual data.
 

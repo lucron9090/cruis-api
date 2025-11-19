@@ -1,0 +1,16 @@
+<aside class="app-sidebar" [class.open]="isOpen">
+    <div class="sidebar-header">
+        <!-- Vehicle Selector Placeholder -->
+        <div class="vehicle-selector-wrapper">
+            <ng-content select=".vehicle-selector"></ng-content>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <!-- Tree Navigation Placeholder -->
+        <ng-content select=".nav-content"></ng-content>
+    </nav>
+</aside>
+
+<div class="sidebar-overlay" [class.open]="isOpen" (click)="closeSidebar.emit()" aria-hidden="true">
+</div>

@@ -23,6 +23,8 @@ import { HorizontalCirclesLoaderComponent } from './core/components/horizontal-c
 import { LayoutComponent } from './core/components/layout/layout.component';
 import { NavHeaderComponent } from './core/components/nav-header/nav-header.component';
 import { VehicleDashboardComponent } from './core/components/vehicle-dashboard/vehicle-dashboard.component';
+import { HeaderComponent } from './core/components/header/header.component';
+import { SidebarComponent } from './core/components/sidebar/sidebar.component';
 import { GlobalErrorHandler } from './core/error-handling.ts/global-error-handler';
 import { ProxyAuthInterceptor } from './core/proxy-auth.interceptor';
 import { UserSettingsService } from './core/user-settings/user-settings.service';
@@ -38,6 +40,7 @@ import { SearchFormComponent } from './search/components/search-form/search-form
 import { SearchResultsItemComponent } from './search/components/search-results-item/search-results-item.component';
 import { SearchResultsPanelComponent } from './search/components/search-results-panel/search-results-panel.component';
 import { YearMakeModelComponent } from './vehicle-selection/components/year-make-model/year-make-model.component';
+import { SharedUiModule } from './shared/shared-ui.module';
 
 @NgModule({
   declarations: [
@@ -64,7 +67,10 @@ import { YearMakeModelComponent } from './vehicle-selection/components/year-make
     LaborOperationComponent,
     GeoBlockingModalComponent,
     DeltaReportComponent,
+    DeltaReportComponent,
     VehicleDashboardComponent,
+    HeaderComponent,
+    SidebarComponent,
   ],
   imports: [
     BrowserModule,
@@ -81,15 +87,17 @@ import { YearMakeModelComponent } from './vehicle-selection/components/year-make
     environment.production ? [] : AkitaNgDevtools.forRoot({ sortAlphabetically: true, name: 'Unabridged Service' }),
     NgbModule,
     NgSelectModule,
-    NgxExtendedPdfViewerModule
+    NgSelectModule,
+    NgxExtendedPdfViewerModule,
+    SharedUiModule
   ],
   providers: [
     Title,
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     { provide: HTTP_INTERCEPTORS, useClass: ProxyAuthInterceptor, multi: true },
     // Force the UserSettingsService to load when the application first starts to set the page title
-    { provide: APP_INITIALIZER, useFactory: () => () => {}, deps: [UserSettingsService], multi: true },
+    { provide: APP_INITIALIZER, useFactory: () => () => { }, deps: [UserSettingsService], multi: true },
   ],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }

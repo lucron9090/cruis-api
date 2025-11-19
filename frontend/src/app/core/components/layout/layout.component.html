@@ -1,39 +1,255 @@
 <!-- YourCar Application - Main Layout Component -->
+<div class="app-layout">
+
+  <!-- Skip Links -->
+  <a href="#main-content" class="skip-link sr-only">Skip to main content</a>
+
+  <!-- New Header Component -->
+  <mtr-header (toggleSidebar)="toggleSidebar()" (toggleMobileMenu)="toggleMobileMenu()">
+  </mtr-header>
+
+  <div class="app-body">
+    <!-- New Sidebar Component -->
+    <mtr-sidebar [isOpen]="isSidebarOpen" (closeSidebar)="isSidebarOpen = false">
+
+      <!-- Projected Content: Vehicle Selector -->
+      <div class="vehicle-selector">
+        <!-- Vehicle Selector Logic (Preserved) -->
+        <div class="vehicle-selector-wrapper">
+          <!-- Link Mode -->
+          <ng-container *ngIf="(modelSelector$ | async) && (userSettingsService.ymmeSelectorMode$ | async) === 'Link'">
+            <a [routerLink]="['/vehicles']" class="vehicle-link">
+              <svg class="icon icon-vehicle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true">
+                <path
+                  d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z"
+                  stroke="currentColor" stroke-width="1.5" />
+              </svg>
+              <span class="vehicle-name truncate" [title]="modelSelector$ | async">
+                {{ modelSelector$ | async }}
+              </span>
+            </a>
+          </ng-container>
+
+          <!-- Text Mode -->
+          <ng-container *ngIf="(modelSelector$ | async) && (userSettingsService.ymmeSelectorMode$ | async) === 'Text'">
+            <div class="vehicle-display">
+              <svg class="icon icon-vehicle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true">
+                <path
+                  d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z"
+                  stroke="currentColor" stroke-width="1.5" />
+              </svg>
+              <span class="vehicle-name truncate" [title]="modelSelector$ | async">
+                {{ modelSelector$ | async }}
+              </span>
+            </div>
+          </ng-container>
+
+          <!-- Dropdown Mode -->
+          <ng-container *ngIf="shouldDisplayModelSelector$ | async">
+            <label for="modelSelector" class="sr-only">Vehicle Selector</label>
+            <select id="modelSelector" class="vehicle-dropdown"
+              [ngModel]="vehicleSelectionFacade.activeVehicleId$ | async"
+              (ngModelChange)="vehicleSelectionFacade.setVehicleId($event)">
+              <option disabled hidden [ngValue]="undefined">Select Your Model</option>
+              <option *ngFor="let vehicle of vehicleSelectionFacade.all$ | async" [value]="vehicle.id">
+                {{ vehicle.model }}
+              </option>
+            </select>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Projected Content: Navigation -->
+      <div class="nav-content">
+        <mtr-search-results-panel *ngFor="let _ of [searchPanelRecreationTrigger$ | async]">
+        </mtr-search-results-panel>
+      </div>
+    </mtr-sidebar>
+
+    <!-- Main Content -->
+    <main class="app-main" id="main-content" role="main">
+      <!-- Filter Tabs (Moved inside main for mobile flow) -->
+      <div class="filter-tabs-container" *ngIf="vehicleSelectionFacade.activeVehicleId$ | async">
+        <mtr-filter-tabs></mtr-filter-tabs>
+      </div>
+
+      <!-- Content Outlet -->
+      <ng-container
+        *ngIf="(assetsFacade.hasContentId$ | async) || (assetsFacade.isMaintenanceScheduleTab$ | async); else dashboardOrSplash">
+        <ng-container *ngTemplateOutlet="articleArea"></ng-container>
+      </ng-container>
+
+      <!-- Dashboard / Splash Screen -->
+      <ng-template #dashboardOrSplash>
+        <ng-container *ngIf="vehicleSelectionFacade.activeVehicleId$ | async; else defaultSplash">
+          <mtr-vehicle-dashboard></mtr-vehicle-dashboard>
+        </ng-container>
+
+        <ng-template #defaultSplash>
+          <div class="splash-screen">
+            <img [src]="userSettingsService.splashUrl$ | async" alt="YourCar Welcome Screen" class="splash-image"
+              loading="lazy" />
+          </div>
+        </ng-template>
+      </ng-template>
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Nav (Optional, can add later) -->
+
+  <!-- Article Area Template (Preserved) -->
+  <ng-template #articleArea>
+    <article class="article-area">
+      <!-- Article Toolbar -->
+      <div class="article-toolbar">
+        <div class="article-toolbar-content">
+          <!-- Outdated Bookmark Warning -->
+          <div *ngIf="assetsFacade.isBookmarkOutdated$ | async" class="alert alert-warning">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                stroke="currentColor" stroke-width="2" />
+              <path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            <span>
+              There is a
+              <a [routerLink]="[]" [queryParams]="{ bookmarkId: null }" queryParamsHandling="merge">
+                newer article available
+              </a>.
+            </span>
+          </div>
+
+          <!-- Toyota License Message -->
+          <span *ngIf="assetsFacade.showLicenseMessageForToyota$ | async" class="license-message">
+            {{ assetsFacade.toyotaLicenseMessage }}
+          </span>
+
+          <!-- Engine/Submodel Selector -->
+          <ng-container *ngIf="shouldDisplayEngineSubModelSelector$ | async">
+            <label for="engineModelSelector" class="sr-only">Engine, Submodel Selector</label>
+            <select id="engineModelSelector" class="engine-selector"
+              [ngModel]="vehicleSelectionFacade.motorVehicleId$ | async"
+              (ngModelChange)="vehicleSelectionFacade.setMotorVehicleId($event)">
+              <option disabled [ngValue]="undefined">Select Your Model</option>
+              <option *ngFor="let vehicle of modelDetails$ | async" [value]="vehicle.id">
+                {{ vehicle.model }}
+              </option>
+            </select>
+          </ng-container>
+
+          <!-- Motor Vehicle Model Display -->
+          <span *ngIf="isMotorVehicleModel$ | async" class="motor-model-display">
+            {{ motorModelSelector$ | async }}
+          </span>
+        </div>
+
+        <!-- Toolbar Actions -->
+        <div class="article-toolbar-actions">
+          <!-- Expand/Collapse Toggle -->
+          <button class="btn btn-icon btn-ghost" (click)="layoutFacade.toggleRightExpandCollapse()"
+            [attr.aria-label]="(layoutFacade.isRightExpanded$ | async) ? 'Collapse article' : 'Expand article'"
+            type="button">
+            <svg *ngIf="!(layoutFacade.isRightExpanded$ | async)" class="icon" viewBox="0 0 24 24" fill="none"
+              xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <svg *ngIf="layoutFacade.isRightExpanded$ | async" class="icon" viewBox="0 0 24 24" fill="none"
+              xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+
+          <!-- Article Toolbox -->
+          <mtr-article-toolbox *ngIf="assetsFacade.activeArticleId$ | async" iframeSelector="#articleContainer iframe">
+          </mtr-article-toolbox>
+        </div>
+      </div>
+
+      <!-- Article Content -->
+      <div class="article-content" id="articleContainer">
+        <!-- Loading State -->
+        <div *ngIf="(assetsFacade.rootLoading$ | async) || IsAwaitingApiResponse" class="article-loading">
+          <div class="spinner-large"></div>
+          <p>Loading article...</p>
+        </div>
+
+        <!-- Error State -->
+        <div *ngIf="assetsFacade.laborError$ | async as errorMessage" class="article-error">
+          <svg class="icon-large" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <h3>Unable to Display Article</h3>
+          <p>{{ errorMessage['status'] === 404 ? 'Your account has not licensed access to labor data.' : 'Unable to
+            display the requested document.' }}</p>
+        </div>
+
+        <!-- Labor Operation -->
+        <mtr-labor-operation *ngIf="assetsFacade.labor$ | async as labor" [labor]="labor">
+        </mtr-labor-operation>
+
+        <!-- Maintenance Schedules -->
+        <mtr-maintenance-schedules
+          *ngIf="(assetsFacade.isMaintenanceScheduleTab$ | async) && !(shouldDisplayEngineSubModelSelector$ | async)">
+        </mtr-maintenance-schedules>
+
+        <!-- Dynamic Article HTML -->
+        <mtr-dynamic-article-html
+          *ngIf="((assetsFacade.rootHtml$ | async) && !(assetsFacade.rootHtmlIsFullPage$ | async)) || (assetsFacade.rootError$ | async)"
+          [class]="'article-content-' + (vehicleSelectionFacade.contentSource$ | async)"
+          [html$]="assetsFacade.rootHtml$" [error$]="assetsFacade.rootError$">
+        </mtr-dynamic-article-html>
+
+        <!-- Full-Page HTML (Iframe) -->
+        <mtr-dynamic-article-html-iframe *ngIf="assetsFacade.rootHtmlIsFullPage$ | async"
+          [html$]="assetsFacade.rootHtml$">
+        </mtr-dynamic-article-html-iframe>
+
+        <!-- PDF Viewer -->
+        <ngx-extended-pdf-viewer class="pdf-viewer" *ngIf="assetsFacade.base64Pdf$ | async"
+          [base64Src]="(assetsFacade.base64Pdf$ | async)!" height="100%" [useBrowserLocale]="true"
+          [showDownloadButton]="detectMobile()" [showOpenFileButton]="false" [showPropertiesButton]="false"
+          [showRotateButton]="false" [showSecondaryToolbarButton]="false" [textLayer]="true"
+          [showPrintButton]="!detectMobile()">
+        </ngx-extended-pdf-viewer>
+      </div>
+    </article>
+  </ng-template>
+</div>
 <!-- Mobile-First, Accessible, Performant -->
 
-<div class="app-layout" 
-     [class.sidebar-open]="isSidebarOpen"
-     [class.mobile-menu-open]="isMobileMenuOpen">
-  
+<div class="app-layout" [class.sidebar-open]="isSidebarOpen" [class.mobile-menu-open]="isMobileMenuOpen">
+
   <!-- Skip Links (Accessibility) -->
   <a href="#main-content" class="skip-link sr-only">Skip to main content</a>
   <a href="#sidebar-nav" class="skip-link sr-only">Skip to navigation</a>
-  
+
   <!-- Main Header -->
   <header class="app-header" role="banner">
     <div class="header-container">
       <div class="header-left">
-        <button 
-          class="btn btn-icon btn-ghost header-menu-toggle"
-          (click)="toggleMobileMenu()"
-          aria-label="Toggle menu"
-          [attr.aria-expanded]="isMobileMenuOpen"
-          type="button">
+        <button class="btn btn-icon btn-ghost header-menu-toggle" (click)="toggleMobileMenu()" aria-label="Toggle menu"
+          [attr.aria-expanded]="isMobileMenuOpen" type="button">
           <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
           </svg>
         </button>
-        <button 
-          class="btn btn-icon btn-ghost sidebar-toggle-desktop"
-          (click)="toggleSidebar()"
-          [attr.aria-label]="isSidebarOpen ? 'Close sidebar' : 'Open sidebar'"
-          [attr.aria-expanded]="isSidebarOpen"
+        <button class="btn btn-icon btn-ghost sidebar-toggle-desktop" (click)="toggleSidebar()"
+          [attr.aria-label]="isSidebarOpen ? 'Close sidebar' : 'Open sidebar'" [attr.aria-expanded]="isSidebarOpen"
           type="button">
-          <svg *ngIf="!isSidebarOpen" class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg *ngIf="!isSidebarOpen" class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true">
+            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
           </svg>
-          <svg *ngIf="isSidebarOpen" class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg *ngIf="isSidebarOpen" class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true">
+            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
           </svg>
         </button>
         <div class="brand-badge" aria-hidden="true">YC</div>
@@ -44,26 +260,23 @@
       </div>
 
       <div class="header-search">
-        <mtr-search-form 
-          *ngIf="vehicleSelectionFacade.activeVehicleId$ | async">
+        <mtr-search-form *ngIf="vehicleSelectionFacade.activeVehicleId$ | async">
         </mtr-search-form>
       </div>
 
       <div class="header-actions">
-        <button 
-          class="btn btn-icon btn-ghost header-search-toggle"
-          (click)="toggleMobileSearch()"
-          aria-label="Toggle search drawer"
-          type="button">
+        <button class="btn btn-icon btn-ghost header-search-toggle" (click)="toggleMobileSearch()"
+          aria-label="Toggle search drawer" type="button">
           <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
           </svg>
         </button>
 
-        <mtr-nav-header 
-          *ngIf="(userSettingsService.hamburgerMenuMode$ | async) === 'Enabled'"
-          class="user-menu">
+        <mtr-nav-header *ngIf="(userSettingsService.hamburgerMenuMode$ | async) === 'Enabled'" class="user-menu">
         </mtr-nav-header>
       </div>
     </div>
@@ -71,16 +284,13 @@
     <!-- Mobile Search Sheet -->
     <div class="mobile-search-bar" [class.expanded]="isMobileSearchOpen">
       <div class="mobile-search-inner">
-        <mtr-search-form 
-          *ngIf="vehicleSelectionFacade.activeVehicleId$ | async">
+        <mtr-search-form *ngIf="vehicleSelectionFacade.activeVehicleId$ | async">
         </mtr-search-form>
-        <button 
-          class="btn btn-icon btn-ghost close-mobile-search"
-          (click)="toggleMobileSearch()"
-          aria-label="Close search"
-          type="button">
+        <button class="btn btn-icon btn-ghost close-mobile-search" (click)="toggleMobileSearch()"
+          aria-label="Close search" type="button">
           <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
           </svg>
         </button>
       </div>
@@ -94,15 +304,11 @@
 
   <!-- Main Content Area -->
   <div class="app-content">
-    
+
     <!-- Sidebar Navigation -->
-    <aside 
-      class="app-sidebar" 
-      [class.open]="isSidebarOpen"
-      role="complementary"
-      id="sidebar-nav"
+    <aside class="app-sidebar" [class.open]="isSidebarOpen" role="complementary" id="sidebar-nav"
       aria-label="Navigation sidebar">
-      
+
       <!-- Sidebar Header -->
       <div class="sidebar-header">
         <!-- Vehicle Selector -->
@@ -110,8 +316,11 @@
           <!-- Link Mode -->
           <ng-container *ngIf="(modelSelector$ | async) && (userSettingsService.ymmeSelectorMode$ | async) === 'Link'">
             <a [routerLink]="['/vehicles']" class="vehicle-link">
-              <svg class="icon icon-vehicle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z" stroke="currentColor" stroke-width="1.5"/>
+              <svg class="icon icon-vehicle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true">
+                <path
+                  d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z"
+                  stroke="currentColor" stroke-width="1.5" />
               </svg>
               <span class="vehicle-name truncate" [title]="modelSelector$ | async">
                 {{ modelSelector$ | async }}
@@ -122,8 +331,11 @@
           <!-- Text Mode -->
           <ng-container *ngIf="(modelSelector$ | async) && (userSettingsService.ymmeSelectorMode$ | async) === 'Text'">
             <div class="vehicle-display">
-              <svg class="icon icon-vehicle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z" stroke="currentColor" stroke-width="1.5"/>
+              <svg class="icon icon-vehicle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true">
+                <path
+                  d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z"
+                  stroke="currentColor" stroke-width="1.5" />
               </svg>
               <span class="vehicle-name truncate" [title]="modelSelector$ | async">
                 {{ modelSelector$ | async }}
@@ -134,9 +346,7 @@
           <!-- Dropdown Mode -->
           <ng-container *ngIf="shouldDisplayModelSelector$ | async">
             <label for="modelSelector" class="sr-only">Vehicle Selector</label>
-            <select
-              id="modelSelector"
-              class="vehicle-dropdown"
+            <select id="modelSelector" class="vehicle-dropdown"
               [ngModel]="vehicleSelectionFacade.activeVehicleId$ | async"
               (ngModelChange)="vehicleSelectionFacade.setVehicleId($event)">
               <option disabled hidden [ngValue]="undefined">Select Your Model</option>
@@ -151,21 +361,17 @@
 
       <!-- Sidebar Content (Navigation Tree) -->
       <nav class="sidebar-nav" aria-label="Document navigation">
-        <mtr-search-results-panel 
-          *ngFor="let _ of [searchPanelRecreationTrigger$ | async]">
+        <mtr-search-results-panel *ngFor="let _ of [searchPanelRecreationTrigger$ | async]">
         </mtr-search-results-panel>
       </nav>
     </aside>
 
     <!-- Main Content Pane -->
-    <main 
-      class="app-main" 
-      id="main-content"
-      role="main"
-      tabindex="-1">
-      
+    <main class="app-main" id="main-content" role="main" tabindex="-1">
+
       <!-- Dashboard or Article Content -->
-      <ng-container *ngIf="(assetsFacade.hasContentId$ | async) || (assetsFacade.isMaintenanceScheduleTab$ | async); else dashboardOrSplash">
+      <ng-container
+        *ngIf="(assetsFacade.hasContentId$ | async) || (assetsFacade.isMaintenanceScheduleTab$ | async); else dashboardOrSplash">
         <ng-container *ngTemplateOutlet="articleArea"></ng-container>
       </ng-container>
 
@@ -174,14 +380,11 @@
         <ng-container *ngIf="vehicleSelectionFacade.activeVehicleId$ | async; else defaultSplash">
           <mtr-vehicle-dashboard></mtr-vehicle-dashboard>
         </ng-container>
-        
+
         <ng-template #defaultSplash>
-              <div class="splash-screen">
-                <img 
-                  [src]="userSettingsService.splashUrl$ | async" 
-                  alt="YourCar Welcome Screen" 
-                  class="splash-image"
-                  loading="lazy" />
+          <div class="splash-screen">
+            <img [src]="userSettingsService.splashUrl$ | async" alt="YourCar Welcome Screen" class="splash-image"
+              loading="lazy" />
           </div>
         </ng-template>
       </ng-template>
@@ -195,11 +398,12 @@
               <!-- Outdated Bookmark Warning -->
               <div *ngIf="assetsFacade.isBookmarkOutdated$ | async" class="alert alert-warning">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="2"/>
-                  <path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                    stroke="currentColor" stroke-width="2" />
+                  <path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
                 <span>
-                  There is a 
+                  There is a
                   <a [routerLink]="[]" [queryParams]="{ bookmarkId: null }" queryParamsHandling="merge">
                     newer article available
                   </a>.
@@ -214,9 +418,7 @@
               <!-- Engine/Submodel Selector -->
               <ng-container *ngIf="shouldDisplayEngineSubModelSelector$ | async">
                 <label for="engineModelSelector" class="sr-only">Engine, Submodel Selector</label>
-                <select
-                  id="engineModelSelector"
-                  class="engine-selector"
+                <select id="engineModelSelector" class="engine-selector"
                   [ngModel]="vehicleSelectionFacade.motorVehicleId$ | async"
                   (ngModelChange)="vehicleSelectionFacade.setMotorVehicleId($event)">
                   <option disabled [ngValue]="undefined">Select Your Model</option>
@@ -235,22 +437,23 @@
             <!-- Toolbar Actions -->
             <div class="article-toolbar-actions">
               <!-- Expand/Collapse Toggle -->
-              <button 
-                class="btn btn-icon btn-ghost"
-                (click)="layoutFacade.toggleRightExpandCollapse()"
+              <button class="btn btn-icon btn-ghost" (click)="layoutFacade.toggleRightExpandCollapse()"
                 [attr.aria-label]="(layoutFacade.isRightExpanded$ | async) ? 'Collapse article' : 'Expand article'"
                 type="button">
-                <svg *ngIf="!(layoutFacade.isRightExpanded$ | async)" class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg *ngIf="!(layoutFacade.isRightExpanded$ | async)" class="icon" viewBox="0 0 24 24" fill="none"
+                  xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-                <svg *ngIf="layoutFacade.isRightExpanded$ | async" class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg *ngIf="layoutFacade.isRightExpanded$ | async" class="icon" viewBox="0 0 24 24" fill="none"
+                  xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </button>
 
               <!-- Article Toolbox -->
-              <mtr-article-toolbox
-                *ngIf="assetsFacade.activeArticleId$ | async"
+              <mtr-article-toolbox *ngIf="assetsFacade.activeArticleId$ | async"
                 iframeSelector="#articleContainer iframe">
               </mtr-article-toolbox>
             </div>
@@ -267,17 +470,16 @@
             <!-- Error State -->
             <div *ngIf="assetsFacade.laborError$ | async as errorMessage" class="article-error">
               <svg class="icon-large" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
               </svg>
               <h3>Unable to Display Article</h3>
-              <p>{{ errorMessage['status'] === 404 ? 'Your account has not licensed access to labor data.' : 'Unable to display the requested document.' }}</p>
+              <p>{{ errorMessage['status'] === 404 ? 'Your account has not licensed access to labor data.' : 'Unable to
+                display the requested document.' }}</p>
             </div>
 
             <!-- Labor Operation -->
-            <mtr-labor-operation 
-              *ngIf="assetsFacade.labor$ | async as labor"
-              [labor]="labor">
+            <mtr-labor-operation *ngIf="assetsFacade.labor$ | async as labor" [labor]="labor">
             </mtr-labor-operation>
 
             <!-- Maintenance Schedules -->
@@ -289,29 +491,19 @@
             <mtr-dynamic-article-html
               *ngIf="((assetsFacade.rootHtml$ | async) && !(assetsFacade.rootHtmlIsFullPage$ | async)) || (assetsFacade.rootError$ | async)"
               [class]="'article-content-' + (vehicleSelectionFacade.contentSource$ | async)"
-              [html$]="assetsFacade.rootHtml$"
-              [error$]="assetsFacade.rootError$">
+              [html$]="assetsFacade.rootHtml$" [error$]="assetsFacade.rootError$">
             </mtr-dynamic-article-html>
 
             <!-- Full-Page HTML (Iframe) -->
-            <mtr-dynamic-article-html-iframe
-              *ngIf="assetsFacade.rootHtmlIsFullPage$ | async"
+            <mtr-dynamic-article-html-iframe *ngIf="assetsFacade.rootHtmlIsFullPage$ | async"
               [html$]="assetsFacade.rootHtml$">
             </mtr-dynamic-article-html-iframe>
 
             <!-- PDF Viewer -->
-          <ngx-extended-pdf-viewer
-            class="pdf-viewer"
-              *ngIf="assetsFacade.base64Pdf$ | async"
-              [base64Src]="(assetsFacade.base64Pdf$ | async)!"
-            height="100%"
-              [useBrowserLocale]="true"
-              [showDownloadButton]="detectMobile()"
-              [showOpenFileButton]="false"
-              [showPropertiesButton]="false"
-              [showRotateButton]="false"
-              [showSecondaryToolbarButton]="false"
-              [textLayer]="true"
+            <ngx-extended-pdf-viewer class="pdf-viewer" *ngIf="assetsFacade.base64Pdf$ | async"
+              [base64Src]="(assetsFacade.base64Pdf$ | async)!" height="100%" [useBrowserLocale]="true"
+              [showDownloadButton]="detectMobile()" [showOpenFileButton]="false" [showPropertiesButton]="false"
+              [showRotateButton]="false" [showSecondaryToolbarButton]="false" [textLayer]="true"
               [showPrintButton]="!detectMobile()">
             </ngx-extended-pdf-viewer>
           </div>
@@ -323,80 +515,63 @@
 
   <!-- Mobile Bottom Navigation -->
   <nav class="mobile-bottom-nav" role="navigation" aria-label="Mobile navigation">
-    <a 
-      class="nav-item" 
-      [routerLink]="['/docs/All']" 
-      [queryParamsHandling]="'merge'"
-      [routerLinkActive]="'active'"
+    <a class="nav-item" [routerLink]="['/docs/All']" [queryParamsHandling]="'merge'" [routerLinkActive]="'active'"
       (click)="closeMobileMenu()">
       <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path
+          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
       <span>Home</span>
     </a>
-    
-    <button 
-      class="nav-item" 
-      (click)="toggleMobileSearch(); closeMobileMenu()"
-      type="button">
+
+    <button class="nav-item" (click)="toggleMobileSearch(); closeMobileMenu()" type="button">
       <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path
+          d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" />
       </svg>
       <span>Search</span>
     </button>
-    
-    <a 
-      class="nav-item" 
-      [routerLink]="['/vehicles']"
-      [routerLinkActive]="'active'"
-      (click)="closeMobileMenu()">
+
+    <a class="nav-item" [routerLink]="['/vehicles']" [routerLinkActive]="'active'" (click)="closeMobileMenu()">
       <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z" stroke="currentColor" stroke-width="1.5"/>
+        <path
+          d="M5 17H4C3.45 17 2.98 16.78 2.59 16.41C2.22 16.02 2 15.55 2 15V11L4.48 5.22C4.64 4.84 5 4.5 5.5 4.5H18.5C19 4.5 19.36 4.84 19.52 5.22L22 11V15C22 15.55 21.78 16.02 21.41 16.41C21.02 16.78 20.55 17 20 17H19M6 19.5C6 20.33 6.67 21 7.5 21C8.33 21 9 20.33 9 19.5C9 18.67 8.33 18 7.5 18C6.67 18 6 18.67 6 19.5M15 19.5C15 20.33 15.67 21 16.5 21C17.33 21 18 20.33 18 19.5C18 18.67 17.33 18 16.5 18C15.67 18 15 18.67 15 19.5Z"
+          stroke="currentColor" stroke-width="1.5" />
       </svg>
       <span>Vehicle</span>
     </a>
-    
-    <button 
-      class="nav-item" 
-      (click)="toggleSidebar()"
-      type="button">
+
+    <button class="nav-item" (click)="toggleSidebar()" type="button">
       <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" />
       </svg>
       <span>Menu</span>
     </button>
   </nav>
 
   <!-- Mobile Menu Overlay -->
-  <div 
-    class="mobile-menu-overlay" 
-    *ngIf="isMobileMenuOpen"
-    (click)="closeMobileMenu()"
-    aria-hidden="true">
+  <div class="mobile-menu-overlay" *ngIf="isMobileMenuOpen" (click)="closeMobileMenu()" aria-hidden="true">
   </div>
 
   <!-- Mobile Drawer Menu -->
-  <div 
-    class="mobile-drawer-menu" 
-    [class.open]="isMobileMenuOpen"
-    role="dialog"
-    aria-modal="true"
+  <div class="mobile-drawer-menu" [class.open]="isMobileMenuOpen" role="dialog" aria-modal="true"
     aria-label="Mobile menu">
-    
+
     <div class="drawer-header">
       <div class="brand-badge" aria-hidden="true">YC</div>
       <div class="brand-copy">
         <h2 class="drawer-title">YourCar</h2>
         <span class="drawer-subtitle">Application</span>
       </div>
-      <button 
-        class="btn btn-icon btn-ghost"
-        (click)="closeMobileMenu()"
-        aria-label="Close menu"
-        type="button">
+      <button class="btn btn-icon btn-ghost" (click)="closeMobileMenu()" aria-label="Close menu" type="button">
         <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" />
         </svg>
       </button>
     </div>
@@ -407,14 +582,9 @@
   </div>
 
   <!-- Back to Top Button -->
-  <button 
-    class="back-to-top" 
-    *ngIf="showBackToTop"
-    (click)="scrollToTop()"
-    aria-label="Back to top"
-    type="button">
+  <button class="back-to-top" *ngIf="showBackToTop" (click)="scrollToTop()" aria-label="Back to top" type="button">
     <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M5 15l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5 15l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
     </svg>
   </button>
 </div>

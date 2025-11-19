@@ -1,0 +1,26 @@
+<div class="card">
+    <!-- Header Slot or Default Header -->
+    <div class="card-header" *ngIf="title || subtitle">
+        <div class="card-header-content">
+            <h3 *ngIf="title" class="card-title">{{ title }}</h3>
+            <p *ngIf="subtitle" class="card-subtitle">{{ subtitle }}</p>
+        </div>
+        <div class="card-header-actions">
+            <ng-content select="[card-actions]"></ng-content>
+        </div>
+    </div>
+
+    <!-- Custom Header Slot -->
+    <ng-content select="[card-header]"></ng-content>
+
+    <!-- Body -->
+    <div class="card-body" [class.p-0]="padding === 'none'" [class.p-sm]="padding === 'sm'"
+        [class.p-md]="padding === 'md'" [class.p-lg]="padding === 'lg'">
+        <ng-content></ng-content>
+    </div>
+
+    <!-- Footer -->
+    <div class="card-footer">
+        <ng-content select="[card-footer]"></ng-content>
+    </div>
+</div>

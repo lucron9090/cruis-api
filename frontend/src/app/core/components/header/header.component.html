@@ -1,0 +1,47 @@
+<header class="app-header">
+  <div class="header-container">
+    <div class="header-left">
+      <!-- Mobile Menu Toggle -->
+      <button 
+        class="btn btn-icon btn-ghost header-menu-toggle"
+        (click)="toggleMobileMenu.emit()"
+        aria-label="Toggle menu">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <!-- Desktop Sidebar Toggle -->
+      <button 
+        class="btn btn-icon btn-ghost sidebar-toggle-desktop"
+        (click)="toggleSidebar.emit()"
+        aria-label="Toggle sidebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <!-- Brand -->
+      <div class="brand">
+        <div class="brand-badge">YC</div>
+        <div class="brand-text">
+          <span class="brand-title">YourCar</span>
+          <span class="brand-subtitle">Application</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Bar (Center) -->
+    <div class="header-search">
+      <mtr-search-form *ngIf="vehicleSelectionFacade.activeVehicleId$ | async"></mtr-search-form>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="header-actions">
+      <mtr-nav-header 
+        *ngIf="(userSettingsService.hamburgerMenuMode$ | async) === 'Enabled'"
+        class="user-menu">
+      </mtr-nav-header>
+    </div>
+  </div>
+</header>

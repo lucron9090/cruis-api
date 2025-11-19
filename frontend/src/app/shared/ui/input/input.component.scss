@@ -1,0 +1,67 @@
+@import 'styles/variables';
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--neutral-700);
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.form-control {
+    width: 100%;
+    height: 40px;
+    padding: 0 var(--space-3);
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--neutral-900);
+    background-color: var(--neutral-0);
+    border: 1px solid var(--neutral-300);
+    border-radius: var(--radius-md);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+    &:focus {
+        outline: none;
+        border-color: var(--primary-500);
+        box-shadow: 0 0 0 3px var(--primary-100);
+    }
+
+    &:disabled {
+        background-color: var(--neutral-100);
+        cursor: not-allowed;
+    }
+
+    &.is-invalid {
+        border-color: #ef4444; // Error color
+        padding-right: var(--space-10); // Space for error icon
+
+        &:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+    }
+}
+
+.error-icon {
+    position: absolute;
+    right: var(--space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ef4444;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+}
+
+.form-error {
+    font-size: 0.75rem;
+    color: #ef4444;
+}
