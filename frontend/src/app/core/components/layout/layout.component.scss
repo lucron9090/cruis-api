@@ -363,9 +363,28 @@
 .app-main {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: hidden;
   background-color: var(--color-bg-primary);
   position: relative;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-hover);
+    border-radius: var(--radius-full);
+
+    &:hover {
+      background-color: var(--color-border);
+    }
+  }
 
   &:focus {
     outline: none;
@@ -506,9 +525,28 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--space-6);
   background-color: var(--color-bg-primary);
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-hover);
+    border-radius: var(--radius-full);
+
+    &:hover {
+      background-color: var(--color-border);
+    }
+  }
 
   @media (min-width: 768px) {
     padding: var(--space-8);
