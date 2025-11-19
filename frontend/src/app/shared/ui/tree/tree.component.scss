@@ -1,0 +1,67 @@
+@import 'styles/variables';
+
+.tree-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tree-item {
+    margin-bottom: 1px;
+}
+
+.tree-content {
+    display: flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-2);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: background-color 0.2s;
+    color: var(--neutral-700);
+
+    &:hover {
+        background-color: var(--neutral-100);
+        color: var(--neutral-900);
+    }
+
+    &.active {
+        background-color: var(--primary-50);
+        color: var(--primary-700);
+        font-weight: 500;
+    }
+}
+
+.tree-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-right: var(--space-1);
+    color: var(--neutral-400);
+    transition: color 0.2s;
+
+    &.invisible {
+        visibility: hidden;
+    }
+
+    svg {
+        transition: transform 0.2s;
+    }
+
+    svg.rotated {
+        transform: rotate(90deg);
+    }
+}
+
+.tree-label {
+    flex: 1;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.tree-children {
+    padding-left: var(--space-4);
+    margin-left: var(--space-2);
+    border-left: 1px solid var(--neutral-200);
+}

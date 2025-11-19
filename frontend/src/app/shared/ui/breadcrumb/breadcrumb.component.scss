@@ -1,0 +1,37 @@
+@import 'styles/variables';
+
+.breadcrumb-list {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    color: var(--neutral-500);
+
+    &.active {
+        color: var(--neutral-900);
+        font-weight: 500;
+    }
+}
+
+.breadcrumb-link {
+    color: var(--neutral-500);
+    text-decoration: none;
+    transition: color 0.2s;
+
+    &:hover {
+        color: var(--primary-600);
+        text-decoration: underline;
+    }
+}
+
+.breadcrumb-separator {
+    margin: 0 var(--space-2);
+    color: var(--neutral-400);
+}

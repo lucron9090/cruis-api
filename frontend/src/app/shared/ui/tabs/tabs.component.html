@@ -1,0 +1,13 @@
+<div class="tabs-container">
+    <div class="tabs-list" role="tablist">
+        <button *ngFor="let tab of tabs" class="tab-item" [class.active]="tab.id === activeTabId"
+            [class.disabled]="tab.disabled" (click)="onTabClick(tab)" role="tab"
+            [attr.aria-selected]="tab.id === activeTabId" [attr.aria-disabled]="tab.disabled" type="button">
+            <span class="tab-label">{{ tab.label }}</span>
+            <mtr-badge *ngIf="tab.count !== undefined" [variant]="tab.id === activeTabId ? 'primary' : 'neutral'"
+                size="sm">
+                {{ tab.count }}
+            </mtr-badge>
+        </button>
+    </div>
+</div>

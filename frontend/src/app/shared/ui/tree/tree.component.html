@@ -1,0 +1,25 @@
+<ul class="tree-list">
+    <li *ngFor="let node of nodes" class="tree-item">
+        <div class="tree-content" [class.active]="node.id === activeNodeId" (click)="toggleNode(node, $event)">
+
+            <!-- Toggle Icon -->
+            <span class="tree-toggle" [class.invisible]="!node.children?.length">
+                <svg [class.rotated]="node.expanded" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                    fill="currentColor" width="16" height="16">
+                    <path fill-rule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clip-rule="evenodd" />
+                </svg>
+            </span>
+
+            <!-- Node Label -->
+            <span class="tree-label">{{ node.label }}</span>
+        </div>
+
+        <!-- Children -->
+        <div *ngIf="node.children && node.expanded" class="tree-children">
+            <mtr-tree [nodes]="node.children" [activeNodeId]="activeNodeId" (nodeClick)="onChildNodeClick($event)">
+            </mtr-tree>
+        </div>
+    </li>
+</ul>
