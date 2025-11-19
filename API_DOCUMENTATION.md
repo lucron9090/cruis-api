@@ -62,6 +62,28 @@ Authentication is handled **automatically** by the server. No authentication hea
 - Expired sessions are automatically renewed
 - Multiple concurrent requests share the same session
 
+## Response Structure
+
+**Important:** Most API endpoints return responses in the following structure:
+
+```json
+{
+  "header": {
+    "messages": [],
+    "date": "Wed, 19 Nov 2025 06:22:13 GMT",
+    "status": "OK",
+    "statusCode": 200
+  },
+  "body": { /* actual response data */ }
+}
+```
+
+- **`header`**: Contains metadata about the response including status, date, and any messages
+- **`body`**: Contains the actual response data (array, object, or primitive value)
+- **Exception**: The `/health` endpoint returns a different structure without the `header`/`body` wrapper
+
+When accessing response data, use `response.body` (or `response.data` for the health endpoint).
+
 ## Endpoints
 
 ### Health Check
@@ -75,9 +97,20 @@ Check the health status of the API proxy and authentication session.
 {
   "status": "ok",
   "authenticated": true,
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "expiresAt": "2024-12-31T23:59:59.000Z",
-  "timestamp": "2024-01-15T10:30:00.000Z"
+  "sessionId": "31018b43-ed6b-42f4-b7c3-8628cfede94c",
+  "expiresAt": "2025-11-19T16:11:51.000Z",
+  "timestamp": "2025-11-19T06:22:12.447Z"
+}
+```
+
+**Real Example Response (tested 2025-11-19):**
+```json
+{
+  "status": "ok",
+  "authenticated": true,
+  "sessionId": "31018b43-ed6b-42f4-b7c3-8628cfede94c",
+  "expiresAt": "2025-11-19T16:11:51.000Z",
+  "timestamp": "2025-11-19T06:22:12.447Z"
 }
 ```
 
@@ -97,9 +130,17 @@ Get all available vehicle model years.
 **Response:**
 ```json
 {
-  "data": [2024, 2023, 2022, 2021, 2020, ...]
+  "header": {
+    "messages": [],
+    "date": "Wed, 19 Nov 2025 06:22:13 GMT",
+    "status": "OK",
+    "statusCode": 200
+  },
+  "body": [1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
 }
 ```
+
+**Note:** The actual response includes a `header` object with metadata and a `body` array containing the years. Access the years via `response.body`.
 
 **Example:**
 ```bash
@@ -118,9 +159,58 @@ Get all vehicle makes for a specific year.
 **Response:**
 ```json
 {
-  "data": ["Toyota", "Honda", "Ford", "Chevrolet", ...]
+  "header": {
+    "messages": [],
+    "date": "Wed, 19 Nov 2025 06:22:19 GMT",
+    "status": "OK",
+    "statusCode": 200
+  },
+  "body": [
+    {
+      "makeId": 2,
+      "makeName": "Porsche"
+    },
+    {
+      "makeId": 3,
+      "makeName": "Hyundai"
+    },
+    {
+      "makeId": 7,
+      "makeName": "Fiat"
+    },
+    {
+      "makeId": 11,
+      "makeName": "Land Rover"
+    },
+    {
+      "makeId": 13,
+      "makeName": "Subaru"
+    },
+    {
+      "makeId": 20,
+      "makeName": "Jaguar"
+    },
+    {
+      "makeId": 21,
+      "makeName": "Kia"
+    },
+    {
+      "makeId": 26,
+      "makeName": "Volvo"
+    },
+    {
+      "makeId": 30,
+      "makeName": "BMW"
+    },
+    {
+      "makeId": 31,
+      "makeName": "Toyota"
+    }
+  ]
 }
 ```
+
+**Note:** The response includes a `header` object and a `body` array containing make objects with `makeId` and `makeName` properties. Access makes via `response.body`.
 
 **Example:**
 ```bash
@@ -140,19 +230,45 @@ Get all vehicle models for a specific make and year.
 **Response:**
 ```json
 {
-  "data": [
-    {
-      "model": "Camry",
-      "engines": [
-        {
-          "id": "12345",
-          "name": "2.5L 4-Cylinder"
-        }
-      ]
-    }
-  ]
+  "header": {
+    "messages": [],
+    "date": "Wed, 19 Nov 2025 06:22:20 GMT",
+    "status": "OK",
+    "statusCode": 200
+  },
+  "body": {
+    "contentSource": "Toyota",
+    "models": [
+      {
+        "model": "4Runner",
+        "id": "2024:Toyota:4Runner:"
+      },
+      {
+        "model": "86",
+        "id": "2024:Toyota:86:"
+      },
+      {
+        "model": "Avanza",
+        "id": "2024:Toyota:Avanza:"
+      },
+      {
+        "model": "Camry",
+        "id": "2024:Toyota:Camry:"
+      },
+      {
+        "model": "Camry HV",
+        "id": "2024:Toyota:Camry HV:"
+      },
+      {
+        "model": "Corolla",
+        "id": "2024:Toyota:Corolla:"
+      }
+    ]
+  }
 }
 ```
+
+**Note:** The response includes a `header` object and a `body` object containing `contentSource` and a `models` array. Each model has a `model` name and an `id` (vehicle identifier). Access models via `response.body.models`. The `id` field is the vehicle identifier used in subsequent API calls.
 
 **Example:**
 ```bash
@@ -604,18 +720,42 @@ The API uses standard HTTP status codes:
 **Error Response Format:**
 ```json
 {
-  "error": "Error type",
-  "message": "Detailed error message"
+  "header": {
+    "messages": [
+      {
+        "code": "500.0000001",
+        "shortDescription": "Unhandled Exception",
+        "longDescription": "An unhandled exception has occurred",
+        "type": "Error"
+      }
+    ],
+    "date": "Wed, 19 Nov 2025 06:22:29 GMT",
+    "status": "Internal Server Error",
+    "statusCode": 500
+  }
 }
 ```
 
-**Example Error Response:**
+**Real Example Error Response (tested 2025-11-19):**
 ```json
 {
-  "error": "Proxy error",
-  "message": "Authentication failed"
+  "header": {
+    "messages": [
+      {
+        "code": "500.0000001",
+        "shortDescription": "Unhandled Exception",
+        "longDescription": "An unhandled exception has occurred",
+        "type": "Error"
+      }
+    ],
+    "date": "Wed, 19 Nov 2025 06:22:29 GMT",
+    "status": "Internal Server Error",
+    "statusCode": 500
+  }
 }
 ```
+
+**Note:** Error responses follow the same structure as successful responses, with a `header` object containing error information. Check `header.statusCode` and `header.messages` for error details.
 
 ---
 
@@ -758,6 +898,8 @@ For issues or questions:
 
 ---
 
-**Last Updated:** January 2024  
+**Last Updated:** November 2025  
 **API Version:** 1.0.0
+
+**Note:** All response examples in this documentation are based on real API responses tested on 2025-11-19. Response structures include a `header` object with metadata and a `body` object/array containing the actual data.
 
